@@ -4,7 +4,11 @@
 require_once '../config.php';
 
 // Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
+$rawInput = file_get_contents('php://input');
+$input = json_decode($rawInput, true);
+
+// Log untuk debugging
+error_log("Register Input: " . $rawInput);
 
 // Validate input
 $error = validateRequired($input, ['username', 'email', 'password']);
@@ -12,8 +16,8 @@ if ($error) {
     sendResponse(false, $error);
 }
 
-$username = trim($input['username']);
-$email = trim($input['email']);
+$username = sanitizeInput($input['username']);
+$email = sanitizeInput($input['email']);
 $password = $input['password'];
 
 // Validate username length
@@ -33,6 +37,10 @@ if (strlen($password) < 6) {
 
 // Check if username already exists
 $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
+if (!$stmt) {
+    sendResponse(false, 'Database error: ' . $conn->error);
+}
+
 $stmt->bind_param("s", $username);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -56,6 +64,10 @@ $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
 // Insert new user
 $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')");
+if (!$stmt) {
+    sendResponse(false, 'Database error: ' . $conn->error);
+}
+
 $stmt->bind_param("sss", $username, $email, $hashedPassword);
 
 if ($stmt->execute()) {
@@ -63,7 +75,7 @@ if ($stmt->execute()) {
         'user_id' => $stmt->insert_id
     ]);
 } else {
-    sendResponse(false, 'Registrasi gagal! ' . $stmt->error);
+    sendResponse(false, 'Registrasi gagal: ' . $stmt->error);
 }
 
 $stmt->close();

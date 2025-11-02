@@ -4,7 +4,11 @@
 require_once '../config.php';
 
 // Get JSON input
-$input = json_decode(file_get_contents('php://input'), true);
+$rawInput = file_get_contents('php://input');
+$input = json_decode($rawInput, true);
+
+// Log untuk debugging
+error_log("Login Input: " . $rawInput);
 
 // Validate input
 $error = validateRequired($input, ['username', 'password']);
@@ -12,7 +16,7 @@ if ($error) {
     sendResponse(false, $error);
 }
 
-$username = trim($input['username']);
+$username = sanitizeInput($input['username']);
 $password = $input['password'];
 
 // Check if username is email
@@ -23,6 +27,10 @@ if ($isEmail) {
     $stmt = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE email = ?");
 } else {
     $stmt = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE username = ?");
+}
+
+if (!$stmt) {
+    sendResponse(false, 'Database error: ' . $conn->error);
 }
 
 $stmt->bind_param("s", $username);

@@ -46,8 +46,15 @@ if (document.getElementById('loginForm')) {
         btnLoading.style.display = 'inline-block';
         
         try {
-            // Send login request to PHP API
-            const response = await fetch('../api/auth/login.php', {
+            // Tentukan path API yang benar
+            const apiPath = window.location.pathname.includes('/user/') || window.location.pathname.includes('/admin/')
+                ? '../api/auth/login.php'
+                : 'api/auth/login.php';
+            
+            console.log('Mengirim ke:', apiPath);
+            console.log('Data:', { username, password: '***' });
+            
+            const response = await fetch(apiPath, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -55,21 +62,24 @@ if (document.getElementById('loginForm')) {
                 body: JSON.stringify({ username, password })
             });
             
+            console.log('Response status:', response.status);
+            
             const data = await response.json();
+            console.log('Response data:', data);
             
             if (data.success) {
                 // Save user data to localStorage
-                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('user', JSON.stringify(data.data.user));
                 
                 // Show success message
                 showAlert('Login berhasil! Mengalihkan...', 'success');
                 
                 // Redirect based on role
                 setTimeout(() => {
-                    if (data.user.role === 'admin') {
-                        window.location.href = '../admin/dashboard.html';
+                    if (data.data.user.role === 'admin') {
+                        window.location.href = 'admin/dashboard.html';
                     } else {
-                        window.location.href = '../user/dashboard.html';
+                        window.location.href = 'user/dashboard.html';
                     }
                 }, 1000);
             } else {
@@ -78,7 +88,7 @@ if (document.getElementById('loginForm')) {
                 btnLoading.style.display = 'none';
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error detail:', error);
             showAlert('Terjadi kesalahan! Pastikan server PHP berjalan.', 'error');
             btnText.style.display = 'inline-block';
             btnLoading.style.display = 'none';
@@ -100,6 +110,7 @@ if (document.getElementById('loginForm')) {
 }
 
 // Register Form Handler
+// Register Form Handler
 if (document.getElementById('registerForm')) {
     const registerForm = document.getElementById('registerForm');
     const alertMessage = document.getElementById('alertMessage');
@@ -110,10 +121,12 @@ if (document.getElementById('registerForm')) {
     passwordInput.addEventListener('input', (e) => {
         const password = e.target.value;
         const strengthBar = document.querySelector('.strength-bar');
-        const strength = calculatePasswordStrength(password);
         
-        strengthBar.style.width = strength.percentage + '%';
-        strengthBar.style.backgroundColor = strength.color;
+        if (strengthBar) {
+            const strength = calculatePasswordStrength(password);
+            strengthBar.style.width = strength.percentage + '%';
+            strengthBar.style.backgroundColor = strength.color;
+        }
     });
     
     // Toggle password visibility
@@ -138,6 +151,7 @@ if (document.getElementById('registerForm')) {
         });
     }
     
+    // SUBMIT FORM - KODE BARU
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -166,8 +180,15 @@ if (document.getElementById('registerForm')) {
         btnLoading.style.display = 'inline-block';
         
         try {
-            // Send register request to PHP API
-            const response = await fetch('../api/auth/register.php', {
+            // Tentukan path API yang benar
+            const apiPath = window.location.pathname.includes('/user/') || window.location.pathname.includes('/admin/')
+                ? '../api/auth/register.php'
+                : 'api/auth/register.php';
+            
+            console.log('Mengirim ke:', apiPath);
+            console.log('Data:', { username, email, password: '***' });
+            
+            const response = await fetch(apiPath, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -175,7 +196,10 @@ if (document.getElementById('registerForm')) {
                 body: JSON.stringify({ username, email, password })
             });
             
+            console.log('Response status:', response.status);
+            
             const data = await response.json();
+            console.log('Response data:', data);
             
             if (data.success) {
                 showAlert('Registrasi berhasil! Mengalihkan ke halaman login...', 'success');
@@ -189,7 +213,7 @@ if (document.getElementById('registerForm')) {
                 btnLoading.style.display = 'none';
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error detail:', error);
             showAlert('Terjadi kesalahan! Pastikan server PHP berjalan.', 'error');
             btnText.style.display = 'inline-block';
             btnLoading.style.display = 'none';
