@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard User - Udayana Event</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar dashboard-nav">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Udayana Event</span>
+            </div>
+            <div class="nav-menu">
+                <a href="dashboard.html" class="active"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="my-events.html"><i class="fas fa-list"></i> Event Saya</a>
+                <div class="nav-user">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="userName">User</span>
+                    <div class="user-dropdown">
+                        <a href="#"><i class="fas fa-cog"></i> Pengaturan</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <div class="welcome-content">
+                    <h1>Selamat Datang, <span id="userNameDisplay">User</span>! 👋</h1>
+                    <p>Kelola event Anda dan jelajahi event kampus lainnya</p>
+                </div>
+                <button class="btn btn-primary" id="createEventBtn">
+                    <i class="fas fa-plus"></i> Buat Event Baru
+                </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalEvents">0</h3>
+                        <p>Total Event</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pendingEvents">0</h3>
+                        <p>Menunggu Approve</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="approvedEvents">0</h3>
+                        <p>Disetujui</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="rejectedEvents">0</h3>
+                        <p>Ditolak</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Events -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-calendar"></i> Event Terbaru Saya</h2>
+                    <a href="my-events.html" class="btn btn-outline-sm">Lihat Semua</a>
+                </div>
+                <div id="recentEventsGrid" class="events-grid">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Memuat event...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Events (Public) -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-fire"></i> Event Mendatang</h2>
+                    <a href="../index.html#events" class="btn btn-outline-sm">Lihat Semua</a>
+                </div>
+                <div id="upcomingEventsGrid" class="events-grid">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Memuat event...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div id="createEventModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Buat Event Baru</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="createEventForm">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventTitle">Judul Event *</label>
+                            <input type="text" id="eventTitle" required placeholder="Masukkan judul event">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventDate">Tanggal *</label>
+                            <input type="date" id="eventDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventTime">Waktu *</label>
+                            <input type="time" id="eventTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventLocation">Lokasi *</label>
+                            <input type="text" id="eventLocation" required placeholder="Contoh: Auditorium Fakultas Teknik">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventCategory">Kategori *</label>
+                            <select id="eventCategory" required>
+                                <option value="">Pilih kategori</option>
+                                <option value="seminar">Seminar</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="kompetisi">Kompetisi</option>
+                                <option value="festival">Festival</option>
+                                <option value="olahraga">Olahraga</option>
+                                <option value="seni">Seni</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventCapacity">Kapasitas *</label>
+                            <input type="number" id="eventCapacity" required placeholder="Jumlah peserta" min="1">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventOrganizer">Penyelenggara *</label>
+                            <input type="text" id="eventOrganizer" required placeholder="Contoh: HMIF Udayana">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventImage">URL Gambar</label>
+                            <input type="url" id="eventImage" placeholder="https://example.com/image.jpg">
+                            <small class="form-hint">Kosongkan jika tidak ada</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventDescription">Deskripsi *</label>
+                            <textarea id="eventDescription" rows="4" required placeholder="Jelaskan detail event Anda"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Event yang Anda buat akan ditinjau oleh admin terlebih dahulu sebelum dipublikasikan</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="cancelCreateBtn">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Kirim untuk Ditinjau
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/script.js"></script>
+    <script>
+        // Check if user is logged in
+        checkAuth('user');
+    </script>
+</body>
+</html>

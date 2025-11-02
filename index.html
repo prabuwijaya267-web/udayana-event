@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udayana Event - Portal Event Universitas Udayana</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Udayana Event</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#events">Events</a>
+                <a href="#about">Tentang</a>
+                <a href="login.html" class="btn-login">Login</a>
+                <a href="register.html" class="btn-register">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Jelajahi Event Kampus Terbaik</h1>
+                <p>Portal informasi lengkap untuk semua kegiatan dan acara di Universitas Udayana</p>
+                <div class="hero-buttons">
+                    <a href="#events" class="btn btn-primary">Lihat Event</a>
+                    <a href="register.html" class="btn btn-outline">Buat Event</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search & Filter Section -->
+    <section class="search-section" id="events">
+        <div class="container">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Cari event...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-category="all">Semua</button>
+                <button class="filter-btn" data-category="seminar">Seminar</button>
+                <button class="filter-btn" data-category="workshop">Workshop</button>
+                <button class="filter-btn" data-category="kompetisi">Kompetisi</button>
+                <button class="filter-btn" data-category="festival">Festival</button>
+                <button class="filter-btn" data-category="olahraga">Olahraga</button>
+                <button class="filter-btn" data-category="seni">Seni</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Grid -->
+    <section class="events-section">
+        <div class="container">
+            <div id="eventsGrid" class="events-grid">
+                <!-- Events akan dimuat dari JavaScript -->
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Memuat event...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="container">
+            <h2>Tentang Udayana Event</h2>
+            <div class="about-grid">
+                <div class="about-card">
+                    <i class="fas fa-users"></i>
+                    <h3>Komunitas Aktif</h3>
+                    <p>Ribuan mahasiswa dan organisasi aktif menggunakan platform ini</p>
+                </div>
+                <div class="about-card">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Terverifikasi</h3>
+                    <p>Semua event diverifikasi oleh admin untuk memastikan kualitas</p>
+                </div>
+                <div class="about-card">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3>Update Real-time</h3>
+                    <p>Informasi event selalu update dan akurat</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-calendar-alt"></i> Udayana Event</h3>
+                    <p>Portal informasi event terlengkap untuk civitas akademika Universitas Udayana</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <a href="#events">Events</a>
+                    <a href="#about">Tentang</a>
+                    <a href="login.html">Login</a>
+                    <a href="register.html">Register</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Kontak</h4>
+                    <p><i class="fas fa-envelope"></i> info@unud.ac.id</p>
+                    <p><i class="fas fa-phone"></i> (0362) 123-4567</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Jimbaran, Bali</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Udayana Event. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

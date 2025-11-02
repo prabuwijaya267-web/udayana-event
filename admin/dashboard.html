@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Udayana Event</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar dashboard-nav admin-nav">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                <span>Admin Panel</span>
+            </div>
+            <div class="nav-menu">
+                <a href="dashboard.html" class="active"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="manage-events.html"><i class="fas fa-tasks"></i> Kelola Event</a>
+                <div class="nav-user">
+                    <i class="fas fa-user-shield"></i>
+                    <span id="userName">Admin</span>
+                    <div class="user-dropdown">
+                        <a href="#"><i class="fas fa-cog"></i> Pengaturan</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="welcome-section admin-welcome">
+                <div class="welcome-content">
+                    <h1>Dashboard Admin 🛡️</h1>
+                    <p>Kelola dan tinjau semua event yang dibuat pengguna</p>
+                </div>
+                <div class="notification-badge">
+                    <i class="fas fa-bell"></i>
+                    <span id="pendingCount" class="badge">0</span>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalEvents">0</h3>
+                        <p>Total Event</p>
+                    </div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pendingEvents">0</h3>
+                        <p>Menunggu Review</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="approvedEvents">0</h3>
+                        <p>Disetujui</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="rejectedEvents">0</h3>
+                        <p>Ditolak</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalUsers">0</h3>
+                        <p>Total Pengguna</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="todayEvents">0</h3>
+                        <p>Event Hari Ini</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Events -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-hourglass-half"></i> Event Menunggu Review</h2>
+                    <a href="manage-events.html" class="btn btn-primary-sm">
+                        <i class="fas fa-tasks"></i> Kelola Semua
+                    </a>
+                </div>
+                
+                <div id="pendingEventsContainer">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Memuat event...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> Aktivitas Terbaru</h2>
+                </div>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon green">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p><strong>Event "Seminar AI" disetujui</strong></p>
+                            <small>2 jam yang lalu</small>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon blue">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p><strong>Event baru "Workshop Design" dibuat</strong></p>
+                            <small>5 jam yang lalu</small>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon red">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p><strong>Event "Lomba Coding" ditolak</strong></p>
+                            <small>1 hari yang lalu</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-circle"></i> Setujui Event</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menyetujui event ini?</p>
+                <div class="event-preview" id="approveEventPreview"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="cancelApproveBtn">Batal</button>
+                <button type="button" class="btn btn-success" id="confirmApproveBtn">
+                    <i class="fas fa-check"></i> Setujui
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-times-circle"></i> Tolak Event</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="event-preview" id="rejectEventPreview"></div>
+                <div class="form-group">
+                    <label for="rejectReason">Alasan Penolakan *</label>
+                    <textarea id="rejectReason" rows="4" required placeholder="Jelaskan alasan penolakan..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="cancelRejectBtn">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirmRejectBtn">
+                    <i class="fas fa-times"></i> Tolak Event
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin.js"></script>
+    <script>
+        // Check if admin is logged in
+        checkAuth('admin');
+    </script>
+</body>
+</html>
