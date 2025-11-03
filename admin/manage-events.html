@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Event - Admin Panel</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar dashboard-nav admin-nav">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                <span>Admin Panel</span>
+            </div>
+            <div class="nav-menu">
+                <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="manage-events.html" class="active"><i class="fas fa-tasks"></i> Kelola Event</a>
+                <div class="nav-user">
+                    <i class="fas fa-user-shield"></i>
+                    <span id="userName">Admin</span>
+                    <div class="user-dropdown">
+                        <a href="#"><i class="fas fa-cog"></i> Pengaturan</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="dashboard-container">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="welcome-section admin-welcome">
+                <div class="welcome-content">
+                    <h1><i class="fas fa-tasks"></i> Kelola Event</h1>
+                    <p>Tinjau, setujui, atau tolak event dari pengguna</p>
+                </div>
+                <div class="stats-mini">
+                    <div class="stat-mini">
+                        <span class="stat-label">Pending:</span>
+                        <span class="stat-value" id="pendingCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="tabs-container">
+                <button class="tab-btn active" data-status="pending">
+                    <i class="fas fa-clock"></i> Pending <span class="badge-tab" id="pendingBadge">0</span>
+                </button>
+                <button class="tab-btn" data-status="approved">
+                    <i class="fas fa-check-circle"></i> Disetujui <span class="badge-tab" id="approvedBadge">0</span>
+                </button>
+                <button class="tab-btn" data-status="rejected">
+                    <i class="fas fa-times-circle"></i> Ditolak <span class="badge-tab" id="rejectedBadge">0</span>
+                </button>
+                <button class="tab-btn" data-status="all">
+                    <i class="fas fa-th"></i> Semua Event <span class="badge-tab" id="allBadge">0</span>
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-container" style="margin: 2rem 0;">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Cari event berdasarkan judul, penyelenggara, atau pembuat...">
+                </div>
+            </div>
+
+            <!-- Events Grid -->
+            <div class="dashboard-section">
+                <div id="manageEventsGrid" class="events-grid">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Memuat event...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Details Modal -->
+    <div id="viewEventModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-info-circle"></i> Detail Event</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="eventDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeViewModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-circle"></i> Setujui Event</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-box success">
+                    <i class="fas fa-question-circle"></i>
+                    <p>Apakah Anda yakin ingin menyetujui event ini?</p>
+                </div>
+                <div class="event-preview" id="approveEventPreview"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="cancelApproveBtn">Batal</button>
+                <button type="button" class="btn btn-success" id="confirmApproveBtn">
+                    <i class="fas fa-check"></i> Setujui Event
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-times-circle"></i> Tolak Event</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-box danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Event yang ditolak akan diberi notifikasi ke pembuat event</p>
+                </div>
+                <div class="event-preview" id="rejectEventPreview"></div>
+                <div class="form-group">
+                    <label for="rejectReason">Alasan Penolakan *</label>
+                    <textarea id="rejectReason" rows="4" required placeholder="Jelaskan alasan penolakan event ini..."></textarea>
+                    <small class="form-hint">Alasan ini akan dilihat oleh pembuat event</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="cancelRejectBtn">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirmRejectBtn">
+                    <i class="fas fa-times"></i> Tolak Event
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-trash"></i> Hapus Event</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-box danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p><strong>Peringatan!</strong> Event yang dihapus tidak dapat dikembalikan.</p>
+                </div>
+                <div class="event-preview" id="deleteEventPreview"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="cancelDeleteBtn">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Hapus Permanen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/manage-events.js"></script>
+    <script>
+        // Check if admin is logged in
+        checkAuth('admin');
+    </script>
+</body>
+</html>
