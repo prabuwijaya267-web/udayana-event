@@ -18,8 +18,10 @@ async function loadAllEvents() {
         const response = await fetch('../api/events/get_all_events.php');
         const data = await response.json();
 
-        if (data.success) {
-            allEvents = data.events;
+        console.log('Manage events response:', data); // Debug
+
+        if (data.success && data.events) {
+            allEvents = data.events; // ✅ Langsung akses data.events
             updateBadges();
             filterAndDisplayEvents();
         } else {

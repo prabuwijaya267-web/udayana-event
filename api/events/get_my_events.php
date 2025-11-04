@@ -27,6 +27,9 @@ while ($row = $result->fetch_assoc()) {
     $events[] = $row;
 }
 
+error_log("GET_MY_EVENTS: Found " . count($events) . " events for user " . $userId);
+
+// ✅ KONSISTEN: Langsung return events
 sendResponse(true, 'User events loaded', [
     'events' => $events
 ]);

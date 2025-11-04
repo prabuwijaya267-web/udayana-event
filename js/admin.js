@@ -20,9 +20,9 @@ async function loadAdminStats() {
         
         console.log('Admin stats response:', data);
         
-        if (data.success && data.data && data.data.events) {
-            allAdminEvents = data.data.events;
-            updateAdminStats(data.data.events);
+        if (data.success && data.events) {
+            allAdminEvents = data.events; // ✅ Langsung akses data.events
+            updateAdminStats(data.events);
         } else {
             console.error('Invalid admin stats response:', data);
         }
@@ -61,10 +61,9 @@ async function loadPendingEvents() {
         
         console.log('Pending events response:', data);
         
-        if (data.success && data.data && data.data.events) {
-            pendingEvents = data.data.events;
+        if (data.success && data.events) {
+            pendingEvents = data.events; // ✅ Langsung akses data.events
             console.log('Pending events loaded:', pendingEvents.length, 'events');
-            console.log('First event:', pendingEvents[0]);
             displayPendingEvents(pendingEvents);
         } else {
             console.error('Invalid pending events response:', data);

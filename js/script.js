@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Load events from API
+// Load events from API
 async function loadEvents() {
     try {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -21,13 +22,14 @@ async function loadEvents() {
         
         console.log('Public events response:', data); // Debug
         
-        if (data.success) {
-            allEvents = data.data.events; // ✅ Akses dari data.data.events
+        if (data.success && data.events) {
+            allEvents = data.events; // ✅ Langsung akses data.events
             displayEvents(allEvents);
             
             // Update stats if on dashboard
             updateDashboardStats();
         } else {
+            console.error('No events found:', data);
             showEmptyState('Tidak ada event tersedia');
         }
     } catch (error) {
@@ -315,8 +317,8 @@ async function updateDashboardStats() {
         
         const data = await response.json();
         
-        if (data.success) {
-            const userEvents = data.data.events;
+        if (data.success && data.events) {
+            const userEvents = data.events; // ✅ Langsung akses data.events
             
             const totalEvents = document.getElementById('totalEvents');
             const pendingEvents = document.getElementById('pendingEvents');
@@ -345,7 +347,7 @@ async function updateDashboardStats() {
     
     // Display upcoming public events
     const upcomingEventsGrid = document.getElementById('upcomingEventsGrid');
-    if (upcomingEventsGrid) {
+    if (upcomingEventsGrid && allEvents) {
         const approvedEvents = allEvents.filter(e => e.status === 'approved').slice(0, 3);
         if (approvedEvents.length > 0) {
             upcomingEventsGrid.innerHTML = approvedEvents.map(event => createEventCard(event)).join('');

@@ -51,7 +51,7 @@ if (!password_verify($password, $user['password'])) {
 // Remove password from response
 unset($user['password']);
 
-// Login successful
+// ✅ KONSISTEN: Langsung return user tanpa nested data
 sendResponse(true, 'Login berhasil!', [
     'user' => $user
 ]);

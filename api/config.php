@@ -42,15 +42,22 @@ $conn->set_charset("utf8mb4");
 // ===== HELPER FUNCTIONS =====
 
 /**
- * Send JSON response
+ * Send JSON response - KONSISTEN UNTUK SEMUA ENDPOINT
  */
-function sendResponse($success, $message, $data = []) {
+function sendResponse($success, $message, $additionalData = []) {
     http_response_code($success ? 200 : 400);
-    echo json_encode([
+    
+    $response = [
         'success' => $success,
-        'message' => $message,
-        'data' => $data
-    ], JSON_UNESCAPED_UNICODE);
+        'message' => $message
+    ];
+    
+    // Merge additional data (seperti events, user, dll)
+    if (!empty($additionalData)) {
+        $response = array_merge($response, $additionalData);
+    }
+    
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
     exit;
 }
 

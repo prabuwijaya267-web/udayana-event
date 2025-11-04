@@ -31,8 +31,8 @@ async function loadMyEvents() {
 
         console.log('My events response:', data); // Debug
 
-        if (data.success) {
-            myEvents = data.data.events; // ✅ Akses dari data.data.events
+        if (data.success && data.events) {
+            myEvents = data.events; // ✅ Langsung akses data.events
             displayMyEvents(myEvents);
         } else {
             showEmptyState('Belum ada event yang dibuat');

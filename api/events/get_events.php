@@ -22,6 +22,7 @@ if ($result->num_rows > 0) {
 // Log untuk debugging
 error_log("GET_EVENTS: Found " . count($events) . " approved events");
 
+// ✅ KONSISTEN: Langsung return events tanpa nested data
 sendResponse(true, 'Events loaded successfully', [
     'events' => $events
 ]);

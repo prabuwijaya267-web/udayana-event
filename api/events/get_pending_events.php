@@ -19,6 +19,9 @@ if ($result->num_rows > 0) {
     }
 }
 
+error_log("GET_PENDING_EVENTS: Found " . count($events) . " pending events");
+
+// ✅ KONSISTEN: Langsung return events
 sendResponse(true, 'Pending events loaded', [
     'events' => $events
 ]);

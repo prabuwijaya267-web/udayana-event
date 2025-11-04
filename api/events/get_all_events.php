@@ -24,6 +24,9 @@ if ($result->num_rows > 0) {
     }
 }
 
+error_log("GET_ALL_EVENTS: Found " . count($events) . " total events");
+
+// ✅ KONSISTEN: Langsung return events
 sendResponse(true, 'All events loaded', [
     'events' => $events
 ]);
