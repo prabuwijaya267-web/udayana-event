@@ -2,9 +2,11 @@
 
 let pendingEvents = [];
 let allAdminEvents = [];
+let currentEventId = null;
 
 // Load admin data
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing admin dashboard...');
     loadAdminStats();
     loadPendingEvents();
     setupAdminListeners();
@@ -16,9 +18,13 @@ async function loadAdminStats() {
         const response = await fetch('../api/events/get_all_events.php');
         const data = await response.json();
         
-        if (data.success) {
-            allAdminEvents = data.events;
-            updateAdminStats(data.events);
+        console.log('Admin stats response:', data);
+        
+        if (data.success && data.data && data.data.events) {
+            allAdminEvents = data.data.events;
+            updateAdminStats(data.data.events);
+        } else {
+            console.error('Invalid admin stats response:', data);
         }
     } catch (error) {
         console.error('Error loading stats:', error);
@@ -28,9 +34,9 @@ async function loadAdminStats() {
 // Update admin stats display
 function updateAdminStats(events) {
     const totalEvents = document.getElementById('totalEvents');
-    const pendingEvents = document.getElementById('pendingEvents');
-    const approvedEvents = document.getElementById('approvedEvents');
-    const rejectedEvents = document.getElementById('rejectedEvents');
+    const pendingEventsEl = document.getElementById('pendingEvents');
+    const approvedEventsEl = document.getElementById('approvedEvents');
+    const rejectedEventsEl = document.getElementById('rejectedEvents');
     const pendingCount = document.getElementById('pendingCount');
     
     if (totalEvents) totalEvents.textContent = events.length;
@@ -39,10 +45,12 @@ function updateAdminStats(events) {
     const approved = events.filter(e => e.status === 'approved').length;
     const rejected = events.filter(e => e.status === 'rejected').length;
     
-    if (pendingEvents) pendingEvents.textContent = pending;
-    if (approvedEvents) approvedEvents.textContent = approved;
-    if (rejectedEvents) rejectedEvents.textContent = rejected;
+    if (pendingEventsEl) pendingEventsEl.textContent = pending;
+    if (approvedEventsEl) approvedEventsEl.textContent = approved;
+    if (rejectedEventsEl) rejectedEventsEl.textContent = rejected;
     if (pendingCount) pendingCount.textContent = pending;
+    
+    console.log('Stats updated - Pending:', pending, 'Approved:', approved, 'Rejected:', rejected);
 }
 
 // Load pending events
@@ -51,19 +59,32 @@ async function loadPendingEvents() {
         const response = await fetch('../api/events/get_pending_events.php');
         const data = await response.json();
         
-        if (data.success) {
-            pendingEvents = data.events;
-            displayPendingEvents(data.events);
+        console.log('Pending events response:', data);
+        
+        if (data.success && data.data && data.data.events) {
+            pendingEvents = data.data.events;
+            console.log('Pending events loaded:', pendingEvents.length, 'events');
+            console.log('First event:', pendingEvents[0]);
+            displayPendingEvents(pendingEvents);
+        } else {
+            console.error('Invalid pending events response:', data);
+            pendingEvents = [];
+            displayPendingEvents([]);
         }
     } catch (error) {
         console.error('Error loading pending events:', error);
+        pendingEvents = [];
+        displayPendingEvents([]);
     }
 }
 
 // Display pending events
 function displayPendingEvents(events) {
     const container = document.getElementById('pendingEventsContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('pendingEventsContainer not found!');
+        return;
+    }
     
     if (events.length === 0) {
         container.innerHTML = `
@@ -75,6 +96,7 @@ function displayPendingEvents(events) {
         return;
     }
     
+    console.log('Displaying', events.length, 'pending events');
     container.innerHTML = events.map(event => createPendingEventCard(event)).join('');
 }
 
@@ -129,10 +151,10 @@ function createPendingEventCard(event) {
                 </div>
                 
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <button onclick="approveEvent(${event.id})" class="btn btn-success" style="flex: 1; padding: 0.5rem;">
+                    <button onclick="window.approveEventHandler(${event.id})" class="btn btn-success" style="flex: 1; padding: 0.5rem;">
                         <i class="fas fa-check"></i> Setujui
                     </button>
-                    <button onclick="rejectEvent(${event.id})" class="btn btn-danger" style="flex: 1; padding: 0.5rem;">
+                    <button onclick="window.rejectEventHandler(${event.id})" class="btn btn-danger" style="flex: 1; padding: 0.5rem;">
                         <i class="fas fa-times"></i> Tolak
                     </button>
                 </div>
@@ -143,6 +165,8 @@ function createPendingEventCard(event) {
 
 // Setup admin listeners
 function setupAdminListeners() {
+    console.log('Setting up admin listeners...');
+    
     // Approve modal
     const approveModal = document.getElementById('approveModal');
     const cancelApproveBtn = document.getElementById('cancelApproveBtn');
@@ -150,7 +174,7 @@ function setupAdminListeners() {
     
     if (cancelApproveBtn) {
         cancelApproveBtn.addEventListener('click', () => {
-            approveModal.classList.remove('active');
+            if (approveModal) approveModal.classList.remove('active');
         });
     }
     
@@ -165,7 +189,7 @@ function setupAdminListeners() {
     
     if (cancelRejectBtn) {
         cancelRejectBtn.addEventListener('click', () => {
-            rejectModal.classList.remove('active');
+            if (rejectModal) rejectModal.classList.remove('active');
         });
     }
     
@@ -181,29 +205,70 @@ function setupAdminListeners() {
             });
         });
     });
+    
+    // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    });
 }
 
-let currentEventId = null;
-
-// Approve event
-function approveEvent(eventId) {
+// Approve event handler - GLOBAL FUNCTION
+window.approveEventHandler = function(eventId) {
+    console.log('=== APPROVE EVENT HANDLER ===');
+    console.log('Event ID:', eventId);
+    console.log('Pending events array:', pendingEvents);
+    console.log('Pending events length:', pendingEvents.length);
+    
     currentEventId = eventId;
-    const event = pendingEvents.find(e => e.id === eventId);
+    
+    // Find event in pendingEvents array
+    const event = pendingEvents.find(e => {
+        console.log('Checking event:', e.id, 'vs', eventId, 'Match:', e.id == eventId);
+        return e.id == eventId; // Use == instead of === to handle string vs number
+    });
+    
+    console.log('Event found:', event);
     
     if (event) {
         const preview = document.getElementById('approveEventPreview');
-        preview.innerHTML = `
-            <h4>${event.title}</h4>
-            <p><strong>Penyelenggara:</strong> ${event.organizer}</p>
-            <p><strong>Tanggal:</strong> ${event.date}</p>
-        `;
+        if (preview) {
+            preview.innerHTML = `
+                <div style="padding: 1rem; background: var(--light-color); border-radius: 8px;">
+                    <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
+                    <p style="margin: 0.25rem 0;"><strong>Penyelenggara:</strong> ${event.organizer}</p>
+                    <p style="margin: 0.25rem 0;"><strong>Tanggal:</strong> ${event.date}</p>
+                    <p style="margin: 0.25rem 0;"><strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}</p>
+                </div>
+            `;
+        }
         
-        document.getElementById('approveModal').classList.add('active');
+        const modal = document.getElementById('approveModal');
+        if (modal) {
+            modal.classList.add('active');
+            console.log('✅ Approve modal opened');
+        } else {
+            console.error('❌ Approve modal not found!');
+        }
+    } else {
+        console.error('❌ Event not found in pendingEvents array!');
+        alert('Event tidak ditemukan! Coba refresh halaman.');
     }
-}
+};
 
 // Confirm approve
 async function confirmApprove() {
+    console.log('=== CONFIRMING APPROVE ===');
+    console.log('Current event ID:', currentEventId);
+    
+    if (!currentEventId) {
+        alert('Event ID tidak ditemukan!');
+        return;
+    }
+    
     try {
         const response = await fetch('../api/events/approve_event.php', {
             method: 'POST',
@@ -215,44 +280,86 @@ async function confirmApprove() {
         
         const data = await response.json();
         
+        console.log('Approve response:', data);
+        
         if (data.success) {
-            alert('Event berhasil disetujui!');
-            document.getElementById('approveModal').classList.remove('active');
-            loadPendingEvents();
-            loadAdminStats();
+            alert('✅ Event berhasil disetujui!');
+            
+            const modal = document.getElementById('approveModal');
+            if (modal) modal.classList.remove('active');
+            
+            // Reload data
+            console.log('Reloading pending events and stats...');
+            await loadPendingEvents();
+            await loadAdminStats();
         } else {
-            alert(data.message || 'Gagal menyetujui event!');
+            alert('❌ ' + (data.message || 'Gagal menyetujui event!'));
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan!');
+        console.error('Error approving event:', error);
+        alert('❌ Terjadi kesalahan saat menyetujui event!');
     }
 }
 
-// Reject event
-function rejectEvent(eventId) {
+// Reject event handler - GLOBAL FUNCTION
+window.rejectEventHandler = function(eventId) {
+    console.log('=== REJECT EVENT HANDLER ===');
+    console.log('Event ID:', eventId);
+    
     currentEventId = eventId;
-    const event = pendingEvents.find(e => e.id === eventId);
+    
+    // Find event in pendingEvents array
+    const event = pendingEvents.find(e => e.id == eventId);
+    
+    console.log('Event found:', event);
     
     if (event) {
         const preview = document.getElementById('rejectEventPreview');
-        preview.innerHTML = `
-            <h4>${event.title}</h4>
-            <p><strong>Penyelenggara:</strong> ${event.organizer}</p>
-            <p><strong>Tanggal:</strong> ${event.date}</p>
-        `;
+        if (preview) {
+            preview.innerHTML = `
+                <div style="padding: 1rem; background: var(--light-color); border-radius: 8px;">
+                    <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
+                    <p style="margin: 0.25rem 0;"><strong>Penyelenggara:</strong> ${event.organizer}</p>
+                    <p style="margin: 0.25rem 0;"><strong>Tanggal:</strong> ${event.date}</p>
+                    <p style="margin: 0.25rem 0;"><strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}</p>
+                </div>
+            `;
+        }
         
-        document.getElementById('rejectReason').value = '';
-        document.getElementById('reject Modal').classList.add('active');
+        const reasonField = document.getElementById('rejectReason');
+        if (reasonField) {
+            reasonField.value = '';
+        }
+        
+        const modal = document.getElementById('rejectModal');
+        if (modal) {
+            modal.classList.add('active');
+            console.log('✅ Reject modal opened');
+        } else {
+            console.error('❌ Reject modal not found!');
+        }
+    } else {
+        console.error('❌ Event not found in pendingEvents array!');
+        alert('Event tidak ditemukan! Coba refresh halaman.');
     }
-}
+};
 
 // Confirm reject
 async function confirmReject() {
-    const reason = document.getElementById('rejectReason').value.trim();
+    const reasonField = document.getElementById('rejectReason');
+    const reason = reasonField ? reasonField.value.trim() : '';
+    
+    console.log('=== CONFIRMING REJECT ===');
+    console.log('Current event ID:', currentEventId);
+    console.log('Reason:', reason);
     
     if (!reason) {
         alert('Mohon masukkan alasan penolakan!');
+        return;
+    }
+    
+    if (!currentEventId) {
+        alert('Event ID tidak ditemukan!');
         return;
     }
     
@@ -270,16 +377,25 @@ async function confirmReject() {
         
         const data = await response.json();
         
+        console.log('Reject response:', data);
+        
         if (data.success) {
-            alert('Event berhasil ditolak!');
-            document.getElementById('rejectModal').classList.remove('active');
-            loadPendingEvents();
-            loadAdminStats();
+            alert('✅ Event berhasil ditolak!');
+            
+            const modal = document.getElementById('rejectModal');
+            if (modal) modal.classList.remove('active');
+            
+            // Reload data
+            console.log('Reloading pending events and stats...');
+            await loadPendingEvents();
+            await loadAdminStats();
         } else {
-            alert(data.message || 'Gagal menolak event!');
+            alert('❌ ' + (data.message || 'Gagal menolak event!'));
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan!');
+        console.error('Error rejecting event:', error);
+        alert('❌ Terjadi kesalahan saat menolak event!');
     }
 }
+
+console.log('admin.js loaded successfully');

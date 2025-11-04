@@ -19,8 +19,10 @@ async function loadEvents() {
         const response = await fetch(endpoint);
         const data = await response.json();
         
+        console.log('Public events response:', data); // Debug
+        
         if (data.success) {
-            allEvents = data.events;
+            allEvents = data.data.events; // ✅ Akses dari data.data.events
             displayEvents(allEvents);
             
             // Update stats if on dashboard
@@ -206,6 +208,7 @@ function filterEvents() {
 }
 
 // Handle create event
+// Handle create event
 async function handleCreateEvent(e) {
     e.preventDefault();
     
@@ -239,11 +242,16 @@ async function handleCreateEvent(e) {
         
         const data = await response.json();
         
+        console.log('Create event response:', data); // Debug
+        
         if (data.success) {
             alert('Event berhasil dibuat! Menunggu persetujuan admin.');
             document.getElementById('createEventModal').classList.remove('active');
             document.getElementById('createEventForm').reset();
-            loadEvents(); // Reload events
+            
+            // Reload events and stats
+            await loadEvents();
+            await updateDashboardStats();
         } else {
             alert(data.message || 'Gagal membuat event!');
         }
@@ -252,6 +260,7 @@ async function handleCreateEvent(e) {
         alert('Terjadi kesalahan! Pastikan server PHP berjalan.');
     }
 }
+
 
 // Edit event
 function editEvent(eventId) {
@@ -289,32 +298,49 @@ async function deleteEvent(eventId) {
 }
 
 // Update dashboard stats
-function updateDashboardStats() {
+// Update dashboard stats
+async function updateDashboardStats() {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user) return;
     
-    // Filter user's events
-    const userEvents = allEvents.filter(e => e.user_id === user.id);
-    
-    const totalEvents = document.getElementById('totalEvents');
-    const pendingEvents = document.getElementById('pendingEvents');
-    const approvedEvents = document.getElementById('approvedEvents');
-    const rejectedEvents = document.getElementById('rejectedEvents');
-    
-    if (totalEvents) totalEvents.textContent = userEvents.length;
-    if (pendingEvents) pendingEvents.textContent = userEvents.filter(e => e.status === 'pending').length;
-    if (approvedEvents) approvedEvents.textContent = userEvents.filter(e => e.status === 'approved').length;
-    if (rejectedEvents) rejectedEvents.textContent = userEvents.filter(e => e.status === 'rejected').length;
-    
-    // Display recent events on dashboard
-    const recentEventsGrid = document.getElementById('recentEventsGrid');
-    if (recentEventsGrid) {
-        const recentEvents = userEvents.slice(0, 3);
-        if (recentEvents.length > 0) {
-            recentEventsGrid.innerHTML = recentEvents.map(event => createEventCard(event)).join('');
-        } else {
-            recentEventsGrid.innerHTML = '<p style="text-align: center; color: var(--gray-color); padding: 2rem;">Belum ada event</p>';
+    try {
+        // Load user's events via API
+        const response = await fetch('../api/events/get_my_events.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: user.id })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const userEvents = data.data.events;
+            
+            const totalEvents = document.getElementById('totalEvents');
+            const pendingEvents = document.getElementById('pendingEvents');
+            const approvedEvents = document.getElementById('approvedEvents');
+            const rejectedEvents = document.getElementById('rejectedEvents');
+            
+            if (totalEvents) totalEvents.textContent = userEvents.length;
+            if (pendingEvents) pendingEvents.textContent = userEvents.filter(e => e.status === 'pending').length;
+            if (approvedEvents) approvedEvents.textContent = userEvents.filter(e => e.status === 'approved').length;
+            if (rejectedEvents) rejectedEvents.textContent = userEvents.filter(e => e.status === 'rejected').length;
+            
+            // Display recent events on dashboard
+            const recentEventsGrid = document.getElementById('recentEventsGrid');
+            if (recentEventsGrid) {
+                const recentEvents = userEvents.slice(0, 3);
+                if (recentEvents.length > 0) {
+                    recentEventsGrid.innerHTML = recentEvents.map(event => createEventCard(event)).join('');
+                } else {
+                    recentEventsGrid.innerHTML = '<p style="text-align: center; color: var(--gray-color); padding: 2rem;">Belum ada event</p>';
+                }
+            }
         }
+    } catch (error) {
+        console.error('Error loading user stats:', error);
     }
     
     // Display upcoming public events

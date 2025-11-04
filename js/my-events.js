@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Load my events from API
+// Load my events from API
 async function loadMyEvents() {
     try {
         const user = JSON.parse(localStorage.getItem('user'));
@@ -28,8 +29,10 @@ async function loadMyEvents() {
 
         const data = await response.json();
 
+        console.log('My events response:', data); // Debug
+
         if (data.success) {
-            myEvents = data.events;
+            myEvents = data.data.events; // ✅ Akses dari data.data.events
             displayMyEvents(myEvents);
         } else {
             showEmptyState('Belum ada event yang dibuat');

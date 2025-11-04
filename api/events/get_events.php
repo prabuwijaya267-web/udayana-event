@@ -19,6 +19,9 @@ if ($result->num_rows > 0) {
     }
 }
 
+// Log untuk debugging
+error_log("GET_EVENTS: Found " . count($events) . " approved events");
+
 sendResponse(true, 'Events loaded successfully', [
     'events' => $events
 ]);
