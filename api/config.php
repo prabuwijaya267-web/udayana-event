@@ -42,9 +42,9 @@ $conn->set_charset("utf8mb4");
 // ===== HELPER FUNCTIONS =====
 
 /**
- * Send JSON response - KONSISTEN UNTUK SEMUA ENDPOINT
+ * Send JSON response - FORMAT KONSISTEN
  */
-function sendResponse($success, $message, $additionalData = []) {
+function sendResponse($success, $message, $data = []) {
     http_response_code($success ? 200 : 400);
     
     $response = [
@@ -52,9 +52,11 @@ function sendResponse($success, $message, $additionalData = []) {
         'message' => $message
     ];
     
-    // Merge additional data (seperti events, user, dll)
-    if (!empty($additionalData)) {
-        $response = array_merge($response, $additionalData);
+    // Merge data langsung ke response (tanpa nested)
+    if (!empty($data)) {
+        foreach ($data as $key => $value) {
+            $response[$key] = $value;
+        }
     }
     
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
