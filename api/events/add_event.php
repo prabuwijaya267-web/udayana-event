@@ -1,5 +1,5 @@
 <?php
-// ===== ADD_EVENT.PHP - Create new event =====
+// ===== ADD_EVENT.PHP - Create new event with Faculty & Prodi =====
 
 require_once '../config.php';
 
@@ -7,7 +7,7 @@ require_once '../config.php';
 $input = json_decode(file_get_contents('php://input'), true);
 
 // Validate required fields
-$requiredFields = ['user_id', 'title', 'date', 'time', 'location', 'category', 'description', 'organizer', 'capacity'];
+$requiredFields = ['user_id', 'title', 'date', 'time', 'location', 'category', 'description', 'organizer', 'capacity', 'faculty', 'study_program'];
 $error = validateRequired($input, $requiredFields);
 if ($error) {
     sendResponse(false, $error);
@@ -21,6 +21,8 @@ $location = trim($input['location']);
 $category = $input['category'];
 $description = trim($input['description']);
 $organizer = trim($input['organizer']);
+$faculty = trim($input['faculty']);
+$studyProgram = trim($input['study_program']);
 $capacity = intval($input['capacity']);
 $image = isset($input['image']) ? trim($input['image']) : null;
 
@@ -38,8 +40,8 @@ if ($eventDate < $today) {
 }
 
 // Insert event
-$stmt = $conn->prepare("INSERT INTO events (user_id, title, date, time, location, category, description, organizer, capacity, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')");
-$stmt->bind_param("isssssssss", $userId, $title, $date, $time, $location, $category, $description, $organizer, $capacity, $image);
+$stmt = $conn->prepare("INSERT INTO events (user_id, title, date, time, location, category, description, organizer, faculty, study_program, capacity, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')");
+$stmt->bind_param("isssssssssss", $userId, $title, $date, $time, $location, $category, $description, $organizer, $faculty, $studyProgram, $capacity, $image);
 
 if ($stmt->execute()) {
     sendResponse(true, 'Event berhasil dibuat dan menunggu persetujuan admin!', [

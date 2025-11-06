@@ -1,4 +1,4 @@
-// ===== SCRIPT.JS - Main functionality for landing page =====
+// ===== SCRIPT.JS - Main functionality for landing page with Faculty & Prodi =====
 
 let allEvents = [];
 let currentFilter = 'all';
@@ -16,7 +16,6 @@ async function loadEvents() {
     console.log('=== LOADING EVENTS ===');
     
     try {
-        // Selalu gunakan path 'api/' untuk index.html
         const endpoint = 'api/events/get_events.php';
         console.log('Fetching from:', endpoint);
         
@@ -82,6 +81,20 @@ function createEventCard(event) {
             </div>
             <div class="event-content">
                 <h3 class="event-title">${event.title}</h3>
+                
+                ${event.faculty ? `
+                    <div class="event-info" style="background: var(--light-color); padding: 0.5rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <i class="fas fa-university" style="color: var(--primary-color);"></i>
+                        <span><strong>${event.faculty}</strong></span>
+                    </div>
+                ` : ''}
+                
+                ${event.study_program ? `
+                    <div class="event-info">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>${event.study_program}</span>
+                    </div>
+                ` : ''}
                 
                 <div class="event-info">
                     <i class="fas fa-calendar"></i>
@@ -151,7 +164,9 @@ function filterEvents() {
             event.title.toLowerCase().includes(searchQuery) ||
             event.description.toLowerCase().includes(searchQuery) ||
             event.location.toLowerCase().includes(searchQuery) ||
-            event.organizer.toLowerCase().includes(searchQuery)
+            event.organizer.toLowerCase().includes(searchQuery) ||
+            (event.faculty && event.faculty.toLowerCase().includes(searchQuery)) ||
+            (event.study_program && event.study_program.toLowerCase().includes(searchQuery))
         );
     }
     

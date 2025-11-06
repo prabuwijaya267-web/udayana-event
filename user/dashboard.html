@@ -169,6 +169,22 @@
 
                     <div class="form-row">
                         <div class="form-group">
+                            <label for="eventFaculty">Fakultas *</label>
+                            <select id="eventFaculty" required>
+                                <option value="">Pilih Fakultas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventStudyProgram">Program Studi *</label>
+                            <select id="eventStudyProgram" required disabled>
+                                <option value="">Pilih Program Studi</option>
+                            </select>
+                            <small class="form-hint">Pilih fakultas terlebih dahulu</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
                             <label for="eventOrganizer">Penyelenggara *</label>
                             <input type="text" id="eventOrganizer" required placeholder="Contoh: HMIF Udayana">
                         </div>
@@ -205,7 +221,8 @@
     </div>
 
     <script src="../js/auth.js"></script>
-    <script src="../js/script.js"></script>
+    <script src="../js/faculty-data.js"></script>
+    <script src="../js/user-dashboard.js"></script>
     <script>
         // Check if user is logged in
         checkAuth('user');

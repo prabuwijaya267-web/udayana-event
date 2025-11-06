@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar dashboard-nav">
@@ -103,7 +105,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="eventLocation">Lokasi *</label>
-                            <input type="text" id="eventLocation" required placeholder="Contoh: Auditorium Fakultas Teknik">
+                            <input type="text" id="eventLocation" required
+                                placeholder="Contoh: Auditorium Fakultas Teknik">
                         </div>
                     </div>
 
@@ -128,6 +131,22 @@
 
                     <div class="form-row">
                         <div class="form-group">
+                            <label for="eventFaculty">Fakultas *</label>
+                            <select id="eventFaculty" required>
+                                <option value="">Pilih Fakultas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventStudyProgram">Program Studi *</label>
+                            <select id="eventStudyProgram" required disabled>
+                                <option value="">Pilih Program Studi</option>
+                            </select>
+                            <small class="form-hint">Pilih fakultas terlebih dahulu</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
                             <label for="eventOrganizer">Penyelenggara *</label>
                             <input type="text" id="eventOrganizer" required placeholder="Contoh: HMIF Udayana">
                         </div>
@@ -144,7 +163,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="eventDescription">Deskripsi *</label>
-                            <textarea id="eventDescription" rows="4" required placeholder="Jelaskan detail event Anda"></textarea>
+                            <textarea id="eventDescription" rows="4" required
+                                placeholder="Jelaskan detail event Anda"></textarea>
                         </div>
                     </div>
 
@@ -178,12 +198,6 @@
             </div>
         </div>
     </div>
-
-    <script src="../js/auth.js"></script>
-    <script src="../js/my-events.js"></script>
-    <script>
-        // Check if user is logged in
-        checkAuth('user');
-    </script>
 </body>
+
 </html>

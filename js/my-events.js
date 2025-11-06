@@ -1,4 +1,4 @@
-// ===== MY-EVENTS.JS - User's events management =====
+// ===== MY-EVENTS.JS - User's events management with Faculty & Prodi =====
 
 let myEvents = [];
 let currentStatus = 'all';
@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMyEventsListeners();
 });
 
-// Load my events from API
 // Load my events from API
 async function loadMyEvents() {
     try {
@@ -29,10 +28,8 @@ async function loadMyEvents() {
 
         const data = await response.json();
 
-        console.log('My events response:', data); // Debug
-
         if (data.success && data.events) {
-            myEvents = data.events; // ✅ Langsung akses data.events
+            myEvents = data.events;
             displayMyEvents(myEvents);
         } else {
             showEmptyState('Belum ada event yang dibuat');
@@ -48,7 +45,6 @@ function displayMyEvents(events) {
     const grid = document.getElementById('myEventsGrid');
     if (!grid) return;
 
-    // Filter by status
     let filtered = events;
     if (currentStatus !== 'all') {
         filtered = events.filter(e => e.status === currentStatus);
@@ -88,6 +84,15 @@ function createMyEventCard(event) {
             </div>
             <div class="event-content">
                 <h3 class="event-title">${event.title}</h3>
+                
+                <div class="event-info" style="background: var(--light-color); padding: 0.5rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                    <i class="fas fa-university" style="color: var(--primary-color);"></i>
+                    <span><strong>${event.faculty || 'Fakultas tidak disebutkan'}</strong></span>
+                </div>
+                <div class="event-info">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>${event.study_program || 'Prodi tidak disebutkan'}</span>
+                </div>
                 
                 <div class="event-info">
                     <i class="fas fa-calendar"></i>
@@ -144,7 +149,6 @@ function createMyEventCard(event) {
 
 // Setup listeners
 function setupMyEventsListeners() {
-    // Tab buttons
     const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -155,7 +159,6 @@ function setupMyEventsListeners() {
         });
     });
 
-    // Create event button
     const createEventBtn = document.getElementById('createEventBtn');
     const createEventModal = document.getElementById('createEventModal');
     const cancelCreateBtn = document.getElementById('cancelCreateBtn');
@@ -173,7 +176,6 @@ function setupMyEventsListeners() {
         });
     }
 
-    // Close modal with X button
     const closeButtons = document.querySelectorAll('.modal-close');
     closeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -184,7 +186,6 @@ function setupMyEventsListeners() {
         });
     });
 
-    // Close modal when clicking outside
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -194,7 +195,6 @@ function setupMyEventsListeners() {
         });
     });
 
-    // Form submit
     const createEventForm = document.getElementById('createEventForm');
     if (createEventForm) {
         createEventForm.addEventListener('submit', handleSubmitEvent);
@@ -215,7 +215,6 @@ function editMyEvent(eventId) {
     const event = myEvents.find(e => e.id === eventId);
     if (!event) return;
 
-    // Fill form with event data
     document.getElementById('modalTitle').textContent = 'Edit Event';
     document.getElementById('submitBtnText').textContent = 'Update Event';
     document.getElementById('eventId').value = event.id;
@@ -228,6 +227,15 @@ function editMyEvent(eventId) {
     document.getElementById('eventOrganizer').value = event.organizer;
     document.getElementById('eventImage').value = event.image || '';
     document.getElementById('eventDescription').value = event.description;
+    
+    // Set faculty and study program
+    document.getElementById('eventFaculty').value = event.faculty || '';
+    if (event.faculty) {
+        populateStudyProgramDropdown(event.faculty, 'eventStudyProgram');
+        setTimeout(() => {
+            document.getElementById('eventStudyProgram').value = event.study_program || '';
+        }, 100);
+    }
 
     document.getElementById('createEventModal').classList.add('active');
 }
@@ -251,6 +259,8 @@ async function handleSubmitEvent(e) {
         category: document.getElementById('eventCategory').value,
         capacity: document.getElementById('eventCapacity').value,
         organizer: document.getElementById('eventOrganizer').value,
+        faculty: document.getElementById('eventFaculty').value,
+        study_program: document.getElementById('eventStudyProgram').value,
         image: document.getElementById('eventImage').value,
         description: document.getElementById('eventDescription').value
     };
@@ -349,6 +359,14 @@ function viewEventDetails(eventId) {
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
             <div class="info-item">
+                <i class="fas fa-university" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                <strong>Fakultas:</strong> ${event.faculty || 'Tidak disebutkan'}
+            </div>
+            <div class="info-item">
+                <i class="fas fa-graduation-cap" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                <strong>Prodi:</strong> ${event.study_program || 'Tidak disebutkan'}
+            </div>
+            <div class="info-item">
                 <i class="fas fa-calendar" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
                 <strong>Tanggal:</strong> ${formattedDate}
             </div>
@@ -406,6 +424,7 @@ function resetForm() {
     const form = document.getElementById('createEventForm');
     if (form) form.reset();
     document.getElementById('eventId').value = '';
+    document.getElementById('eventStudyProgram').disabled = true;
 }
 
 // Show empty state
