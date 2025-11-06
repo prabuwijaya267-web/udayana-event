@@ -421,7 +421,7 @@ img {
 
 .toggle-password {
     position: absolute;
-    right: 1rem;
+    /*right: 0rem;*/
     left: auto;
     cursor: pointer;
 }

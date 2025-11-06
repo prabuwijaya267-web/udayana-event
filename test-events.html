@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Events</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .event { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Test Load Events</h1>
+    <button onclick="testLoad()">Load Events</button>
+    <div id="result"></div>
+    <div id="events"></div>
+
+    <script>
+        async function testLoad() {
+            const resultDiv = document.getElementById('result');
+            const eventsDiv = document.getElementById('events');
+            
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('api/events/get_events.php');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>Response:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                if (data.success && data.events) {
+                    eventsDiv.innerHTML = data.events.map(e => `
+                        <div class="event">
+                            <h3>${e.title}</h3>
+                            <p>Status: ${e.status}</p>
+                            <p>Date: ${e.date}</p>
+                            <p>Location: ${e.location}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    eventsDiv.innerHTML = '<p style="color:red;">No events found!</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto load on page load
+        window.addEventListener('DOMContentLoaded', testLoad);
+    </script>
+</body>
+</html>
