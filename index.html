@@ -16,7 +16,7 @@
                 <span>Udayana Event</span>
             </div>
             <div class="nav-menu">
-                <a href=>Home</a>
+                <a href="index.html">Home</a>
                 <a href="#events">Events</a>
                 <a href="#about">Tentang</a>
                 <a href="login.html" class="btn-login">Login</a>
@@ -33,7 +33,7 @@
                 <p>Portal informasi lengkap untuk semua kegiatan dan acara di Universitas Udayana</p>
                 <div class="hero-buttons">
                     <a href="#events" class="btn btn-primary">Lihat Event</a>
-                    <a href="register.html" class="btn btn-outline">Buat Event</a>
+                    <a href="#" onclick="handleCreateEventClick(event)" class="btn btn-outline">Buat Event</a>
                 </div>
             </div>
         </div>
@@ -62,7 +62,6 @@
     <section class="events-section">
         <div class="container">
             <div id="eventsGrid" class="events-grid">
-                <!-- Events akan dimuat dari JavaScript -->
                 <div class="loading">
                     <i class="fas fa-spinner fa-spin"></i>
                     <p>Memuat event...</p>
@@ -123,6 +122,26 @@
         </div>
     </footer>
 
+    <script src="js/auth.js"></script>
     <script src="js/script.js"></script>
+    <script>
+        // Handle create event button click
+        function handleCreateEventClick(e) {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            if (!user) {
+                // Not logged in - redirect to login
+                alert('Silakan login terlebih dahulu untuk membuat event');
+                window.location.href = 'login.html';
+            } else if (user.role === 'admin') {
+                // Admin tidak bisa buat event
+                alert('Admin tidak dapat membuat event');
+            } else {
+                // User logged in - redirect to my-events page
+                window.location.href = 'user/my-events.html';
+            }
+        }
+    </script>
 </body>
 </html>
