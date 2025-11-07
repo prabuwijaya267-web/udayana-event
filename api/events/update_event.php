@@ -1,5 +1,5 @@
 <?php
-// ===== UPDATE_EVENT.PHP - Update existing event =====
+// ===== UPDATE_EVENT.PHP - Update existing event with Faculty & Prodi =====
 
 require_once '../config.php';
 
@@ -7,7 +7,7 @@ require_once '../config.php';
 $input = json_decode(file_get_contents('php://input'), true);
 
 // Validate required fields
-$requiredFields = ['id', 'title', 'date', 'time', 'location', 'category', 'description', 'organizer', 'capacity'];
+$requiredFields = ['id', 'title', 'date', 'time', 'location', 'category', 'description', 'organizer', 'capacity', 'faculty', 'study_program'];
 $error = validateRequired($input, $requiredFields);
 if ($error) {
     sendResponse(false, $error);
@@ -21,6 +21,8 @@ $location = trim($input['location']);
 $category = $input['category'];
 $description = trim($input['description']);
 $organizer = trim($input['organizer']);
+$faculty = trim($input['faculty']);
+$studyProgram = trim($input['study_program']);
 $capacity = intval($input['capacity']);
 $image = isset($input['image']) ? trim($input['image']) : null;
 
@@ -35,13 +37,13 @@ if ($result->num_rows === 0) {
 }
 
 $event = $result->fetch_assoc();
-if ($event['status'] !== 'pending') {
-    sendResponse(false, 'Hanya event dengan status pending yang bisa diedit!');
+if ($event['status'] !== 'pending' && $event['status'] !== 'rejected') {
+    sendResponse(false, 'Hanya event dengan status pending atau rejected yang bisa diedit!');
 }
 
 // Update event
-$stmt = $conn->prepare("UPDATE events SET title = ?, date = ?, time = ?, location = ?, category = ?, description = ?, organizer = ?, capacity = ?, image = ? WHERE id = ?");
-$stmt->bind_param("sssssssssi", $title, $date, $time, $location, $category, $description, $organizer, $capacity, $image, $eventId);
+$stmt = $conn->prepare("UPDATE events SET title = ?, date = ?, time = ?, location = ?, category = ?, description = ?, organizer = ?, faculty = ?, study_program = ?, capacity = ?, image = ? WHERE id = ?");
+$stmt->bind_param("sssssssssssi", $title, $date, $time, $location, $category, $description, $organizer, $faculty, $studyProgram, $capacity, $image, $eventId);
 
 if ($stmt->execute()) {
     sendResponse(true, 'Event berhasil diupdate!');
