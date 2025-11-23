@@ -1,4 +1,6 @@
-// ===== MANAGE-EVENTS.JS - Admin event management =====
+// ===== MANAGE-EVENTS.JS - Admin event management (DEBUG VERSION) =====
+
+console.log('🚀 manage-events.js is loading...');
 
 let allEvents = [];
 let filteredEvents = [];
@@ -8,27 +10,39 @@ let currentEventId = null;
 
 // Load all events
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ DOMContentLoaded event fired');
+    console.log('Starting initialization...');
+    
     loadAllEvents();
     setupManageListeners();
+    
+    console.log('Initialization complete');
 });
 
 // Load all events from API
 async function loadAllEvents() {
+    console.log('📥 Loading all events...');
+    
     try {
         const response = await fetch('../api/events/get_all_events.php');
+        console.log('API Response status:', response.status);
+        
         const data = await response.json();
-
-        console.log('Manage events response:', data); // Debug
+        console.log('API Response data:', data);
 
         if (data.success && data.events) {
-            allEvents = data.events; // ✅ Langsung akses data.events
+            allEvents = data.events;
+            console.log('✅ Events loaded successfully:', allEvents.length, 'events');
+            console.log('First event sample:', allEvents[0]);
+            
             updateBadges();
             filterAndDisplayEvents();
         } else {
+            console.warn('⚠️ No events found or API error');
             showEmptyState('Tidak ada event');
         }
     } catch (error) {
-        console.error('Error loading events:', error);
+        console.error('❌ Error loading events:', error);
         showEmptyState('Gagal memuat event');
     }
 }
@@ -44,10 +58,14 @@ function updateBadges() {
     document.getElementById('rejectedBadge').textContent = rejected;
     document.getElementById('allBadge').textContent = allEvents.length;
     document.getElementById('pendingCount').textContent = pending;
+
+    console.log('📊 Badges updated - Pending:', pending, 'Approved:', approved, 'Rejected:', rejected);
 }
 
 // Filter and display events
 function filterAndDisplayEvents() {
+    console.log('🔍 Filtering events - Status:', currentStatus, 'Search:', searchQuery);
+    
     let filtered = allEvents;
 
     // Filter by status
@@ -66,13 +84,20 @@ function filterAndDisplayEvents() {
     }
 
     filteredEvents = filtered;
+    console.log('📋 Filtered events count:', filtered.length);
+    
     displayEvents(filtered);
 }
 
 // Display events
 function displayEvents(events) {
+    console.log('🎨 Displaying', events.length, 'events');
+    
     const grid = document.getElementById('manageEventsGrid');
-    if (!grid) return;
+    if (!grid) {
+        console.error('❌ manageEventsGrid element not found!');
+        return;
+    }
 
     if (events.length === 0) {
         showEmptyState(searchQuery ? 'Tidak ada event yang sesuai pencarian' : `Tidak ada event ${currentStatus === 'all' ? '' : currentStatus}`);
@@ -80,6 +105,82 @@ function displayEvents(events) {
     }
 
     grid.innerHTML = events.map(event => createAdminEventCard(event)).join('');
+    console.log('✅ Events rendered to DOM');
+    
+    // Attach event listeners after rendering
+    setTimeout(() => {
+        console.log('⏱️ Attaching button listeners...');
+        attachButtonListeners();
+    }, 100);
+}
+
+// Attach event listeners to buttons
+function attachButtonListeners() {
+    // View buttons
+    const viewButtons = document.querySelectorAll('.btn-view-detail');
+    console.log('🔘 Found', viewButtons.length, 'view buttons');
+    
+    viewButtons.forEach((btn, index) => {
+        const eventId = parseInt(btn.getAttribute('data-id'));
+        console.log(`  - Attaching listener to view button ${index + 1}, Event ID:`, eventId);
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('👁️ VIEW BUTTON CLICKED! Event ID:', eventId);
+            viewEventDetailsHandler(eventId);
+        });
+    });
+    
+    // Approve buttons
+    const approveButtons = document.querySelectorAll('.btn-approve');
+    console.log('🔘 Found', approveButtons.length, 'approve buttons');
+    
+    approveButtons.forEach((btn, index) => {
+        const eventId = parseInt(btn.getAttribute('data-id'));
+        console.log(`  - Attaching listener to approve button ${index + 1}, Event ID:`, eventId);
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('✅ APPROVE BUTTON CLICKED! Event ID:', eventId);
+            approveEventHandler(eventId);
+        });
+    });
+    
+    // Reject buttons
+    const rejectButtons = document.querySelectorAll('.btn-reject');
+    console.log('🔘 Found', rejectButtons.length, 'reject buttons');
+    
+    rejectButtons.forEach((btn, index) => {
+        const eventId = parseInt(btn.getAttribute('data-id'));
+        console.log(`  - Attaching listener to reject button ${index + 1}, Event ID:`, eventId);
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('❌ REJECT BUTTON CLICKED! Event ID:', eventId);
+            rejectEventHandler(eventId);
+        });
+    });
+    
+    // Delete buttons
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    console.log('🔘 Found', deleteButtons.length, 'delete buttons');
+    
+    deleteButtons.forEach((btn, index) => {
+        const eventId = parseInt(btn.getAttribute('data-id'));
+        console.log(`  - Attaching listener to delete button ${index + 1}, Event ID:`, eventId);
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🗑️ DELETE BUTTON CLICKED! Event ID:', eventId);
+            deleteEventHandler(eventId);
+        });
+    });
+    
+    console.log('✅ All button listeners attached successfully');
 }
 
 // Create admin event card
@@ -114,6 +215,20 @@ function createAdminEventCard(event) {
                     <span><strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}</span>
                 </div>
 
+                ${event.faculty ? `
+                    <div class="event-info" style="background: var(--light-color); padding: 0.5rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <i class="fas fa-university" style="color: var(--primary-color);"></i>
+                        <span><strong>${event.faculty}</strong></span>
+                    </div>
+                ` : ''}
+
+                ${event.study_program ? `
+                    <div class="event-info">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>${event.study_program}</span>
+                    </div>
+                ` : ''}
+
                 <div class="event-info">
                     <i class="fas fa-calendar"></i>
                     <span>${formattedDate}</span>
@@ -145,18 +260,18 @@ function createAdminEventCard(event) {
                 ` : ''}
                 
                 <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button onclick="viewEventDetails(${event.id})" class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
+                    <button class="btn btn-outline btn-view-detail" data-id="${event.id}" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
                         <i class="fas fa-eye"></i> Detail
                     </button>
                     ${event.status === 'pending' ? `
-                        <button onclick="approveEvent(${event.id})" class="btn btn-success" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
+                        <button class="btn btn-success btn-approve" data-id="${event.id}" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
                             <i class="fas fa-check"></i> Setujui
                         </button>
-                        <button onclick="rejectEvent(${event.id})" class="btn btn-danger" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
+                        <button class="btn btn-danger btn-reject" data-id="${event.id}" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
                             <i class="fas fa-times"></i> Tolak
                         </button>
                     ` : ''}
-                    <button onclick="deleteEventAdmin(${event.id})" class="btn btn-danger" style="padding: 0.5rem; font-size: 0.875rem;">
+                    <button class="btn btn-danger btn-delete" data-id="${event.id}" style="padding: 0.5rem; font-size: 0.875rem;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -165,15 +280,20 @@ function createAdminEventCard(event) {
     `;
 }
 
-// Setup listeners
+// Setup modal and tab listeners
 function setupManageListeners() {
+    console.log('⚙️ Setting up modal and tab listeners...');
+    
     // Tab buttons
     const tabButtons = document.querySelectorAll('.tab-btn');
+    console.log('Found', tabButtons.length, 'tab buttons');
+    
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             tabButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentStatus = btn.getAttribute('data-status');
+            console.log('📑 Tab changed to:', currentStatus);
             filterAndDisplayEvents();
         });
     });
@@ -183,55 +303,13 @@ function setupManageListeners() {
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             searchQuery = e.target.value.toLowerCase();
+            console.log('🔎 Search query:', searchQuery);
             filterAndDisplayEvents();
         });
     }
 
-    // Approve modal
-    const cancelApproveBtn = document.getElementById('cancelApproveBtn');
-    const confirmApproveBtn = document.getElementById('confirmApproveBtn');
-
-    if (cancelApproveBtn) {
-        cancelApproveBtn.addEventListener('click', () => {
-            document.getElementById('approveModal').classList.remove('active');
-        });
-    }
-
-    if (confirmApproveBtn) {
-        confirmApproveBtn.addEventListener('click', confirmApprove);
-    }
-
-    // Reject modal
-    const cancelRejectBtn = document.getElementById('cancelRejectBtn');
-    const confirmRejectBtn = document.getElementById('confirmRejectBtn');
-
-    if (cancelRejectBtn) {
-        cancelRejectBtn.addEventListener('click', () => {
-            document.getElementById('rejectModal').classList.remove('active');
-        });
-    }
-
-    if (confirmRejectBtn) {
-        confirmRejectBtn.addEventListener('click', confirmReject);
-    }
-
-    // Delete modal
-    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-
-    if (cancelDeleteBtn) {
-        cancelDeleteBtn.addEventListener('click', () => {
-            document.getElementById('deleteModal').classList.remove('active');
-        });
-    }
-
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', confirmDelete);
-    }
-
-    // Close modals with X button
-    const closeButtons = document.querySelectorAll('.modal-close');
-    closeButtons.forEach(btn => {
+    // Modal close buttons
+    document.querySelectorAll('.modal-close').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.classList.remove('active');
@@ -247,179 +325,50 @@ function setupManageListeners() {
             }
         });
     });
+
+    // Approve modal buttons
+    const cancelApproveBtn = document.getElementById('cancelApproveBtn');
+    const confirmApproveBtn = document.getElementById('confirmApproveBtn');
+    if (cancelApproveBtn) cancelApproveBtn.addEventListener('click', () => {
+        document.getElementById('approveModal').classList.remove('active');
+    });
+    if (confirmApproveBtn) confirmApproveBtn.addEventListener('click', confirmApprove);
+
+    // Reject modal buttons
+    const cancelRejectBtn = document.getElementById('cancelRejectBtn');
+    const confirmRejectBtn = document.getElementById('confirmRejectBtn');
+    if (cancelRejectBtn) cancelRejectBtn.addEventListener('click', () => {
+        document.getElementById('rejectModal').classList.remove('active');
+    });
+    if (confirmRejectBtn) confirmRejectBtn.addEventListener('click', confirmReject);
+
+    // Delete modal buttons
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => {
+        document.getElementById('deleteModal').classList.remove('active');
+    });
+    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', confirmDelete);
+    
+    console.log('✅ Modal and tab listeners setup complete');
 }
 
-// Approve event
-function approveEvent(eventId) {
-    currentEventId = eventId;
-    const event = allEvents.find(e => e.id === eventId);
-
-    if (event) {
-        const preview = document.getElementById('approveEventPreview');
-        preview.innerHTML = `
-            <div style="padding: 1rem; background: var(--light-color); border-radius: 8px; margin-top: 1rem;">
-                <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
-                <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
-                    <strong>Penyelenggara:</strong> ${event.organizer}
-                </p>
-                <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
-                    <strong>Tanggal:</strong> ${event.date}
-                </p>
-                <p style="color: var(--gray-color); font-size: 0.875rem;">
-                    <strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}
-                </p>
-            </div>
-        `;
-
-        document.getElementById('approveModal').classList.add('active');
-    }
-}
-
-// Confirm approve
-async function confirmApprove() {
-    try {
-        const response = await fetch('../api/events/approve_event.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: currentEventId })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            alert('Event berhasil disetujui!');
-            document.getElementById('approveModal').classList.remove('active');
-            loadAllEvents();
-        } else {
-            alert(data.message || 'Gagal menyetujui event!');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan!');
-    }
-}
-
-// Reject event
-function rejectEvent(eventId) {
-    currentEventId = eventId;
-    const event = allEvents.find(e => e.id === eventId);
-
-    if (event) {
-        const preview = document.getElementById('rejectEventPreview');
-        preview.innerHTML = `
-            <div style="padding: 1rem; background: var(--light-color); border-radius: 8px; margin-top: 1rem; margin-bottom: 1rem;">
-                <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
-                <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
-                    <strong>Penyelenggara:</strong> ${event.organizer}
-                </p>
-                <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
-                    <strong>Tanggal:</strong> ${event.date}
-                </p>
-                <p style="color: var(--gray-color); font-size: 0.875rem;">
-                    <strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}
-                </p>
-            </div>
-        `;
-
-        document.getElementById('rejectReason').value = '';
-        document.getElementById('rejectModal').classList.add('active');
-    }
-}
-
-// Confirm reject
-async function confirmReject() {
-    const reason = document.getElementById('rejectReason').value.trim();
-
-    if (!reason) {
-        alert('Mohon masukkan alasan penolakan!');
+// View event details handler
+function viewEventDetailsHandler(eventId) {
+    console.log('=== VIEW EVENT DETAILS HANDLER ===');
+    console.log('Event ID:', eventId);
+    console.log('All events:', allEvents.length);
+    
+    const event = allEvents.find(e => e.id == eventId);
+    
+    if (!event) {
+        console.error('❌ Event not found! Event ID:', eventId);
+        console.log('Available event IDs:', allEvents.map(e => e.id));
+        alert('Event tidak ditemukan!');
         return;
     }
 
-    try {
-        const response = await fetch('../api/events/reject_event.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                id: currentEventId,
-                reason: reason
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            alert('Event berhasil ditolak!');
-            document.getElementById('rejectModal').classList.remove('active');
-            loadAllEvents();
-        } else {
-            alert(data.message || 'Gagal menolak event!');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan!');
-    }
-}
-
-// Delete event (admin)
-function deleteEventAdmin(eventId) {
-    currentEventId = eventId;
-    const event = allEvents.find(e => e.id === eventId);
-
-    if (event) {
-        const preview = document.getElementById('deleteEventPreview');
-        preview.innerHTML = `
-            <div style="padding: 1rem; background: var(--light-color); border-radius: 8px; margin-top: 1rem;">
-                <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
-                <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
-                    <strong>Status:</strong> <span class="status-badge status-${event.status}">${event.status}</span>
-                </p>
-                <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
-                    <strong>Penyelenggara:</strong> ${event.organizer}
-                </p>
-                <p style="color: var(--gray-color); font-size: 0.875rem;">
-                    <strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}
-                </p>
-            </div>
-        `;
-
-        document.getElementById('deleteModal').classList.add('active');
-    }
-}
-
-// Confirm delete
-async function confirmDelete() {
-    try {
-        const response = await fetch('../api/events/delete_event.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: currentEventId })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            alert('Event berhasil dihapus!');
-            document.getElementById('deleteModal').classList.remove('active');
-            loadAllEvents();
-        } else {
-            alert(data.message || 'Gagal menghapus event!');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan!');
-    }
-}
-
-// View event details
-function viewEventDetails(eventId) {
-    const event = allEvents.find(e => e.id === eventId);
-    if (!event) return;
+    console.log('✅ Event found:', event);
 
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('id-ID', {
@@ -454,6 +403,18 @@ function viewEventDetails(eventId) {
                 <i class="fas fa-user" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
                 <strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}
             </div>
+            ${event.faculty ? `
+                <div class="info-item">
+                    <i class="fas fa-university" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                    <strong>Fakultas:</strong> ${event.faculty}
+                </div>
+            ` : ''}
+            ${event.study_program ? `
+                <div class="info-item">
+                    <i class="fas fa-graduation-cap" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                    <strong>Prodi:</strong> ${event.study_program}
+                </div>
+            ` : ''}
             <div class="info-item">
                 <i class="fas fa-calendar" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
                 <strong>Tanggal:</strong> ${formattedDate}
@@ -498,13 +459,251 @@ function viewEventDetails(eventId) {
         </div>
     `;
 
-    document.getElementById('eventDetailsContent').innerHTML = content;
-    document.getElementById('viewEventModal').classList.add('active');
+    const modalContent = document.getElementById('eventDetailsContent');
+    const modal = document.getElementById('viewEventModal');
+    
+    if (modalContent && modal) {
+        modalContent.innerHTML = content;
+        modal.classList.add('active');
+        console.log('✅ View modal opened successfully');
+    } else {
+        console.error('❌ Modal elements not found!');
+    }
 }
 
 // Close view modal
 function closeViewModal() {
-    document.getElementById('viewEventModal').classList.remove('active');
+    console.log('Closing view modal...');
+    const modal = document.getElementById('viewEventModal');
+    if (modal) {
+        modal.classList.remove('active');
+        console.log('✅ View modal closed');
+    }
+}
+
+window.closeViewModal = closeViewModal;
+
+// Approve event handler
+function approveEventHandler(eventId) {
+    console.log('=== APPROVE EVENT HANDLER ===');
+    console.log('Event ID:', eventId);
+    
+    currentEventId = eventId;
+    const event = allEvents.find(e => e.id == eventId);
+
+    if (event) {
+        console.log('Event found:', event.title);
+        
+        const preview = document.getElementById('approveEventPreview');
+        if (preview) {
+            preview.innerHTML = `
+                <div style="padding: 1rem; background: var(--light-color); border-radius: 8px; margin-top: 1rem;">
+                    <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
+                    <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        <strong>Penyelenggara:</strong> ${event.organizer}
+                    </p>
+                    <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        <strong>Tanggal:</strong> ${event.date}
+                    </p>
+                    <p style="color: var(--gray-color); font-size: 0.875rem;">
+                        <strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}
+                    </p>
+                </div>
+            `;
+        }
+
+        const modal = document.getElementById('approveModal');
+        if (modal) {
+            modal.classList.add('active');
+            console.log('✅ Approve modal opened');
+        }
+    } else {
+        console.error('❌ Event not found!');
+        alert('Event tidak ditemukan!');
+    }
+}
+
+async function confirmApprove() {
+    console.log('=== CONFIRMING APPROVE ===');
+    console.log('Event ID:', currentEventId);
+    
+    if (!currentEventId) {
+        alert('Event ID tidak ditemukan!');
+        return;
+    }
+    
+    try {
+        const response = await fetch('../api/events/approve_event.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentEventId })
+        });
+
+        const data = await response.json();
+        console.log('Approve response:', data);
+
+        if (data.success) {
+            alert('✅ Event berhasil disetujui!');
+            document.getElementById('approveModal').classList.remove('active');
+            loadAllEvents();
+        } else {
+            alert('❌ ' + (data.message || 'Gagal menyetujui event!'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Terjadi kesalahan!');
+    }
+}
+
+// Reject event handler
+function rejectEventHandler(eventId) {
+    console.log('=== REJECT EVENT HANDLER ===');
+    console.log('Event ID:', eventId);
+    
+    currentEventId = eventId;
+    const event = allEvents.find(e => e.id == eventId);
+
+    if (event) {
+        console.log('Event found:', event.title);
+        
+        const preview = document.getElementById('rejectEventPreview');
+        if (preview) {
+            preview.innerHTML = `
+                <div style="padding: 1rem; background: var(--light-color); border-radius: 8px; margin-top: 1rem; margin-bottom: 1rem;">
+                    <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
+                    <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        <strong>Penyelenggara:</strong> ${event.organizer}
+                    </p>
+                    <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        <strong>Tanggal:</strong> ${event.date}
+                    </p>
+                    <p style="color: var(--gray-color); font-size: 0.875rem;">
+                        <strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}
+                    </p>
+                </div>
+            `;
+        }
+
+        const reasonField = document.getElementById('rejectReason');
+        if (reasonField) reasonField.value = '';
+        
+        const modal = document.getElementById('rejectModal');
+        if (modal) {
+            modal.classList.add('active');
+            console.log('✅ Reject modal opened');
+        }
+    } else {
+        console.error('❌ Event not found!');
+        alert('Event tidak ditemukan!');
+    }
+}
+
+async function confirmReject() {
+    const reasonField = document.getElementById('rejectReason');
+    const reason = reasonField ? reasonField.value.trim() : '';
+
+    console.log('=== CONFIRMING REJECT ===');
+    console.log('Event ID:', currentEventId);
+    console.log('Reason:', reason);
+
+    if (!reason) {
+        alert('Mohon masukkan alasan penolakan!');
+        return;
+    }
+
+    try {
+        const response = await fetch('../api/events/reject_event.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentEventId, reason: reason })
+        });
+
+        const data = await response.json();
+        console.log('Reject response:', data);
+
+        if (data.success) {
+            alert('✅ Event berhasil ditolak!');
+            document.getElementById('rejectModal').classList.remove('active');
+            loadAllEvents();
+        } else {
+            alert('❌ ' + (data.message || 'Gagal menolak event!'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Terjadi kesalahan!');
+    }
+}
+
+// Delete event handler
+function deleteEventHandler(eventId) {
+    console.log('=== DELETE EVENT HANDLER ===');
+    console.log('Event ID:', eventId);
+    
+    currentEventId = eventId;
+    const event = allEvents.find(e => e.id == eventId);
+
+    if (event) {
+        console.log('Event found:', event.title);
+        
+        const preview = document.getElementById('deleteEventPreview');
+        if (preview) {
+            preview.innerHTML = `
+                <div style="padding: 1rem; background: var(--light-color); border-radius: 8px; margin-top: 1rem;">
+                    <h4 style="margin-bottom: 0.5rem;">${event.title}</h4>
+                    <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        <strong>Status:</strong> <span class="status-badge status-${event.status}">${event.status}</span>
+                    </p>
+                    <p style="color: var(--gray-color); font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        <strong>Penyelenggara:</strong> ${event.organizer}
+                    </p>
+                    <p style="color: var(--gray-color); font-size: 0.875rem;">
+                        <strong>Dibuat oleh:</strong> ${event.username || 'Unknown'}
+                    </p>
+                </div>
+            `;
+        }
+
+        const modal = document.getElementById('deleteModal');
+        if (modal) {
+            modal.classList.add('active');
+            console.log('✅ Delete modal opened');
+        }
+    } else {
+        console.error('❌ Event not found!');
+        alert('Event tidak ditemukan!');
+    }
+}
+
+async function confirmDelete() {
+    console.log('=== CONFIRMING DELETE ===');
+    console.log('Event ID:', currentEventId);
+    
+    if (!currentEventId) {
+        alert('Event ID tidak ditemukan!');
+        return;
+    }
+    
+    try {
+        const response = await fetch('../api/events/delete_event.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentEventId })
+        });
+
+        const data = await response.json();
+        console.log('Delete response:', data);
+
+        if (data.success) {
+            alert('✅ Event berhasil dihapus!');
+            document.getElementById('deleteModal').classList.remove('active');
+            loadAllEvents();
+        } else {
+            alert('❌ ' + (data.message || 'Gagal menghapus event!'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Terjadi kesalahan!');
+    }
 }
 
 // Show empty state
@@ -520,3 +719,5 @@ function showEmptyState(message) {
         `;
     }
 }
+
+console.log('✅ manage-events.js loaded successfully');

@@ -271,12 +271,20 @@ img {
 }
 
 .event-card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
+
+.event-content {
+    flex: 1; /* konten memanjang */
+}
+
+.event-footer {
+    margin-top: auto; /* tombol turun ke bawah */
+    padding-top: 1rem;
+}
+
 
 .event-card:hover {
     transform: translateY(-5px);

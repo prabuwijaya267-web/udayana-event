@@ -88,7 +88,7 @@
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h2><i class="fas fa-info-circle"></i> Detail Event</h2>
-                <button class="modal-close">&times;</button>
+                <button class="modal-close" onclick="closeViewModal()">&times;</button>
             </div>
             <div class="modal-body" id="eventDetailsContent">
                 <!-- Content will be loaded dynamically -->
@@ -173,11 +173,16 @@
         </div>
     </div>
 
+    <!-- IMPORTANT: Load scripts in correct order -->
     <script src="../js/auth.js"></script>
     <script src="../js/manage-events.js"></script>
     <script>
         // Check if admin is logged in
         checkAuth('admin');
+        
+        // Debug: Log when page is ready
+        console.log('=== PAGE READY ===');
+        console.log('DOM loaded, scripts should be initialized');
     </script>
 </body>
 </html>
