@@ -1,4 +1,4 @@
-// ===== SCRIPT.JS - Main functionality for landing page with View Detail Modal =====
+// ===== SCRIPT.JS - Main functionality for landing page =====
 
 console.log('🚀 script.js loaded');
 
@@ -10,30 +10,46 @@ let searchQuery = '';
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("📄 Page loaded, initializing...");
 
-    await checkExpiredEvents();   // Update expired di DB
-    await loadEvents();           // Load event setelah expired diupdate
+    // PENTING: Update expired events di database dulu
+    await checkExpiredEvents();
+    
+    // Baru load events (yang sudah di-filter expired di server)
+    await loadEvents();
 
-    setupEventListeners();        // Filter, search, dll
+    setupEventListeners();
 });
 
+// Check and update expired events
 async function checkExpiredEvents() {
     try {
-        await fetch("api/events/check_expired_events.php");
-        console.log("Expired events updated");
-    } catch (e) {
-        console.warn("Failed to run check_expired_events.php");
+        console.log('⏰ Checking for expired events...');
+        console.log('Current time (WIT):', new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jayapura' }));
+        
+        const response = await fetch('api/events/check_expired_events.php');
+        const data = await response.json();
+
+        console.log('📋 Expired check response:', data);
+
+        if (data.success) {
+            console.log('✅ Expired check complete');
+            console.log('   - Timezone:', data.timezone);
+            console.log('   - Events updated to expired:', data.updated);
+            console.log('   - Total expired events:', data.total_expired);
+            console.log('   - Total active events:', data.total_active);
+            console.log('   - Server datetime (WIT):', data.current_datetime);
+        } else {
+            console.error('❌ Expired check failed:', data.message);
+        }
+    } catch (error) {
+        console.error('❌ Error checking expired events:', error);
     }
 }
-
 
 // Load events from API
 async function loadEvents() {
     console.log('📥 Loading events from API...');
 
     try {
-        // First, check for expired events
-        await checkExpiredEvents();
-
         const endpoint = 'api/events/get_events.php';
         console.log('Fetching from:', endpoint);
 
@@ -47,10 +63,10 @@ async function loadEvents() {
         if (data.success && data.events && data.events.length > 0) {
             console.log('✅ Events loaded successfully:', data.events.length);
 
-            // Filter: hanya tampilkan event yang belum expired
-            allEvents = data.events.filter(e => e.expired == 0);
+            // DOUBLE CHECK: Filter hanya event yang belum expired
+            allEvents = data.events.filter(e => e.expired == 0 || e.expired === '0');
 
-            console.log("Filtered active events:", allEvents.length);
+            console.log("Active (non-expired) events:", allEvents.length);
 
             displayEvents(allEvents);
         } else {
@@ -61,39 +77,6 @@ async function loadEvents() {
         console.error('❌ Error loading events:', error);
         showEmptyState('Gagal memuat event. Pastikan server PHP berjalan.');
     }
-}
-
-// Check and update expired events
-async function checkExpiredEvents() {
-    try {
-        console.log('⏰ Checking for expired events...');
-        const response = await fetch('api/events/check_expired_events.php');
-        const data = await response.json();
-
-        if (data.success) {
-            console.log('✅ Expired check complete:', data.updated, 'events updated');
-        }
-    } catch (error) {
-        console.error('Error checking expired events:', error);
-    }
-}
-
-// Check if event expires soon (H-1)
-function isExpiringSoon(eventDate, eventTime) {
-    const now = new Date();
-    const eventDateTime = new Date(eventDate + ' ' + eventTime);
-    const diffTime = eventDateTime - now;
-    const diffHours = diffTime / (1000 * 60 * 60);
-
-    // Return true if event is within 24 hours (H-1)
-    return diffHours > 0 && diffHours <= 24;
-}
-
-// Check if event is expired
-function isEventExpired(eventDate, eventTime) {
-    const now = new Date();
-    const eventDateTime = new Date(eventDate + ' ' + eventTime);
-    return now >= eventDateTime;
 }
 
 // Display events in grid
@@ -121,6 +104,17 @@ function displayEvents(events) {
     }, 100);
 
     console.log('✅ Events displayed successfully');
+}
+
+// Check if event expires soon (H-1)
+function isExpiringSoon(eventDate, eventTime) {
+    const now = new Date();
+    const eventDateTime = new Date(eventDate + ' ' + eventTime);
+    const diffTime = eventDateTime - now;
+    const diffHours = diffTime / (1000 * 60 * 60);
+
+    // Return true if event is within 24 hours (H-1)
+    return diffHours > 0 && diffHours <= 24;
 }
 
 // Attach event listeners to View Detail buttons
@@ -152,7 +146,7 @@ function createEventCard(event) {
         day: 'numeric'
     });
 
-    // Check if expiring soon
+    // Check if expiring soon (dalam 24 jam)
     const expiringSoon = isExpiringSoon(event.date, event.time);
 
     return `
@@ -161,16 +155,15 @@ function createEventCard(event) {
                 <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
                      alt="${event.title}" class="event-image">
 
-                <!-- ONLY category badge shown on image -->
+                <!-- Category badge -->
                 <span class="event-badge" style="left: 1rem;">${event.category}</span>
             </div>
 
             <div class="event-content">
-
-                <!-- TITLE + EXPIRED TAG HERE -->
+                <!-- Title dengan warning jika akan expired -->
                 <h3 class="event-title">
                     ${event.title}
-                    ${expiringSoon ? `<span class="expired-tag"><i class="fas fa-exclamation-triangle"></i> Expired Soon</span>` : ""}
+                    ${expiringSoon ? `<span class="expired-tag"><i class="fas fa-exclamation-triangle"></i> Segera Berakhir</span>` : ""}
                 </h3>
                 
                 ${event.faculty ? `
@@ -194,7 +187,7 @@ function createEventCard(event) {
 
                 <div class="event-info">
                     <i class="fas fa-clock"></i>
-                    <span>${event.time} WITA</span>
+                    <span>${event.time} WIT</span>
                 </div>
 
                 <div class="event-info">
@@ -218,7 +211,6 @@ function createEventCard(event) {
                         <i class="fas fa-eye"></i> Lihat Detail
                     </button>
                 </div>
-
             </div>
         </div>
     `;
@@ -228,7 +220,6 @@ function createEventCard(event) {
 function showEventDetail(eventId) {
     console.log('=== SHOW EVENT DETAIL ===');
     console.log('Event ID:', eventId);
-    console.log('All events:', allEvents.length);
 
     const event = allEvents.find(e => e.id == eventId);
 
@@ -301,7 +292,7 @@ function showEventDetail(eventId) {
                 </div>
                 <div>
                     <div style="font-size: 0.75rem; color: var(--gray-color); text-transform: uppercase; font-weight: 600;">Waktu</div>
-                    <div style="font-weight: 600; color: var(--dark-color);">${event.time} WITA</div>
+                    <div style="font-weight: 600; color: var(--dark-color);">${event.time} WIT</div>
                 </div>
             </div>
             

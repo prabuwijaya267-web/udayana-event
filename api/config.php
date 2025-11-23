@@ -1,6 +1,9 @@
 <?php
 // ===== CONFIG.PHP - Database Connection & Helper Functions =====
 
+// Set timezone ke WITA (Bali, Sulawesi) - UTC+8
+date_default_timezone_set('Asia/Makassar');
+
 // Enable error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);

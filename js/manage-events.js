@@ -235,7 +235,7 @@ function createAdminEventCard(event) {
                 </div>
                 <div class="event-info">
                     <i class="fas fa-clock"></i>
-                    <span>${event.time} WITA</span>
+                    <span>${event.time} WIT</span>
                 </div>
                 <div class="event-info">
                     <i class="fas fa-map-marker-alt"></i>
@@ -421,7 +421,7 @@ function viewEventDetailsHandler(eventId) {
             </div>
             <div class="info-item">
                 <i class="fas fa-clock" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                <strong>Waktu:</strong> ${event.time} WITA
+                <strong>Waktu:</strong> ${event.time} WIT
             </div>
             <div class="info-item">
                 <i class="fas fa-map-marker-alt" style="color: var(--primary-color); margin-right: 0.5rem;"></i>

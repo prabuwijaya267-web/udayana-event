@@ -180,7 +180,7 @@ function createEventCard(event) {
                 </div>
                 <div class="event-info">
                     <i class="fas fa-clock"></i>
-                    <span>${event.time} WITA</span>
+                    <span>${event.time} WIT</span>
                 </div>
                 <div class="event-info">
                     <i class="fas fa-map-marker-alt"></i>
@@ -226,7 +226,7 @@ function createPublicEventCard(event) {
                 </div>
                 <div class="event-info">
                     <i class="fas fa-clock"></i>
-                    <span>${event.time} WITA</span>
+                    <span>${event.time} WIT</span>
                 </div>
                 <div class="event-info">
                     <i class="fas fa-map-marker-alt"></i>
