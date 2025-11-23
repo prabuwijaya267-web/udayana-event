@@ -18,6 +18,9 @@ async function loadMyEvents() {
             return;
         }
 
+        // Check for expired events first
+        await checkExpiredEvents();
+
         const response = await fetch('../api/events/get_my_events.php', {
             method: 'POST',
             headers: {
@@ -40,6 +43,30 @@ async function loadMyEvents() {
     }
 }
 
+// Check and update expired events
+async function checkExpiredEvents() {
+    try {
+        const response = await fetch('../api/events/check_expired_events.php');
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('Expired check complete:', data.updated, 'events updated');
+        }
+    } catch (error) {
+        console.error('Error checking expired events:', error);
+    }
+}
+
+// Check if event expires soon (H-1)
+function isExpiringSoon(eventDate, eventTime) {
+    const now = new Date();
+    const eventDateTime = new Date(eventDate + ' ' + eventTime);
+    const diffTime = eventDateTime - now;
+    const diffHours = diffTime / (1000 * 60 * 60);
+    
+    return diffHours > 0 && diffHours <= 24;
+}
+
 // Display my events
 function displayMyEvents(events) {
     const grid = document.getElementById('myEventsGrid');
@@ -59,6 +86,7 @@ function displayMyEvents(events) {
 }
 
 // Create my event card
+// Create my event card
 function createMyEventCard(event) {
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('id-ID', {
@@ -68,19 +96,49 @@ function createMyEventCard(event) {
         day: 'numeric'
     });
 
-    const statusClass = event.status === 'pending' ? 'yellow' : event.status === 'approved' ? 'green' : 'red';
-    const statusText = event.status === 'pending' ? 'Menunggu Review' : event.status === 'approved' ? 'Disetujui' : 'Ditolak';
-    const statusIcon = event.status === 'pending' ? 'clock' : event.status === 'approved' ? 'check-circle' : 'times-circle';
+    // Check if expired or expiring soon
+    const isExpired = event.expired == 1;
+    const expiringSoon = !isExpired && isExpiringSoon(event.date, event.time);
+    
+    let statusClass, statusText, statusIcon, borderColor;
+    
+    if (isExpired) {
+        statusClass = 'expired';
+        statusText = 'Expired';
+        statusIcon = 'calendar-times';
+        borderColor = '#6b7280';
+    } else if (event.status === 'pending') {
+        statusClass = 'warning';
+        statusText = 'Menunggu Review';
+        statusIcon = 'clock';
+        borderColor = 'var(--warning-color)';
+    } else if (event.status === 'approved') {
+        statusClass = 'success';
+        statusText = 'Disetujui';
+        statusIcon = 'check-circle';
+        borderColor = 'var(--success-color)';
+    } else {
+        statusClass = 'danger';
+        statusText = 'Ditolak';
+        statusIcon = 'times-circle';
+        borderColor = 'var(--danger-color)';
+    }
 
     return `
-        <div class="event-card" style="border-left: 4px solid var(--${statusClass === 'yellow' ? 'warning' : statusClass === 'green' ? 'success' : 'danger'}-color);">
+        <div class="event-card ${isExpired ? 'expired' : ''}" style="border-left: 4px solid ${borderColor};">
             <div style="position: relative;">
                 <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
                      alt="${event.title}" class="event-image">
                 <span class="event-badge">${event.category}</span>
-                <span class="status-badge status-${event.status}" style="position: absolute; top: 1rem; left: 1rem;">
-                    <i class="fas fa-${statusIcon}"></i> ${statusText}
+                <span class="status-badge status-${event.status} ${isExpired ? 'status-expired' : ''}" style="position: absolute; top: 1rem; right: 1rem; left: auto;">
+                    <i class="fas fa-${statusIcon
+                    }"></i> ${statusText}
                 </span>
+                ${expiringSoon && !isExpired ? `
+                    <span class="event-badge" style="position: absolute; top: 3.5rem; right: 1rem; left: auto; background: #ef4444;">
+                        <i class="fas fa-exclamation-triangle"></i> Expired Soon!
+                    </span>
+                ` : ''}
             </div>
             <div class="event-content">
                 <h3 class="event-title">${event.title}</h3>
@@ -117,6 +175,15 @@ function createMyEventCard(event) {
                     <strong>Penyelenggara:</strong> ${event.organizer}
                 </div>
 
+                ${isExpired ? `
+                    <div style="margin-top: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px; border-left: 3px solid #6b7280;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; color: #4b5563; font-size: 0.875rem;">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Event ini sudah berakhir</strong>
+                        </div>
+                    </div>
+                ` : ''}
+
                 ${event.rejected_reason ? `
                     <div style="margin-top: 1rem; padding: 1rem; background: #fee2e2; border-radius: 8px; border-left: 3px solid #ef4444;">
                         <div style="display: flex; align-items: start; gap: 0.5rem;">
@@ -133,12 +200,17 @@ function createMyEventCard(event) {
                     <button onclick="viewEventDetails(${event.id})" class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
                         <i class="fas fa-eye"></i> Lihat
                     </button>
-                    ${event.status === 'pending' || event.status === 'rejected' ? `
+                    ${(event.status === 'pending' || event.status === 'rejected') && !isExpired ? `
                         <button onclick="editMyEvent(${event.id})" class="btn btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                         <button onclick="deleteMyEvent(${event.id})" class="btn btn-danger" style="padding: 0.5rem; font-size: 0.875rem;">
                             <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
+                    ${isExpired ? `
+                        <button onclick="deleteMyEvent(${event.id})" class="btn btn-danger" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
+                            <i class="fas fa-trash"></i> Hapus
                         </button>
                     ` : ''}
                 </div>

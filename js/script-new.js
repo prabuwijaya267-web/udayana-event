@@ -7,30 +7,51 @@ let currentFilter = 'all';
 let searchQuery = '';
 
 // Load events on page load
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('📄 Page loaded, initializing...');
-    loadEvents();
-    setupEventListeners();
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log("📄 Page loaded, initializing...");
+
+    await checkExpiredEvents();   // Update expired di DB
+    await loadEvents();           // Load event setelah expired diupdate
+
+    setupEventListeners();        // Filter, search, dll
 });
+
+async function checkExpiredEvents() {
+    try {
+        await fetch("api/events/check_expired_events.php");
+        console.log("Expired events updated");
+    } catch (e) {
+        console.warn("Failed to run check_expired_events.php");
+    }
+}
+
 
 // Load events from API
 async function loadEvents() {
     console.log('📥 Loading events from API...');
-    
+
     try {
+        // First, check for expired events
+        await checkExpiredEvents();
+
         const endpoint = 'api/events/get_events.php';
         console.log('Fetching from:', endpoint);
-        
+
         const response = await fetch(endpoint);
         console.log('Response status:', response.status);
-        
+
         const data = await response.json();
         console.log('Data received:', data);
         console.log('Events count:', data.events ? data.events.length : 0);
-        
+
         if (data.success && data.events && data.events.length > 0) {
             console.log('✅ Events loaded successfully:', data.events.length);
-            allEvents = data.events;
+
+            // Filter: hanya tampilkan event yang belum expired
+            allEvents = data.events.filter(e => e.expired == 0);
+
+            console.log("Filtered active events:", allEvents.length);
+
             displayEvents(allEvents);
         } else {
             console.warn('⚠️ No events found');
@@ -42,30 +63,63 @@ async function loadEvents() {
     }
 }
 
+// Check and update expired events
+async function checkExpiredEvents() {
+    try {
+        console.log('⏰ Checking for expired events...');
+        const response = await fetch('api/events/check_expired_events.php');
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('✅ Expired check complete:', data.updated, 'events updated');
+        }
+    } catch (error) {
+        console.error('Error checking expired events:', error);
+    }
+}
+
+// Check if event expires soon (H-1)
+function isExpiringSoon(eventDate, eventTime) {
+    const now = new Date();
+    const eventDateTime = new Date(eventDate + ' ' + eventTime);
+    const diffTime = eventDateTime - now;
+    const diffHours = diffTime / (1000 * 60 * 60);
+
+    // Return true if event is within 24 hours (H-1)
+    return diffHours > 0 && diffHours <= 24;
+}
+
+// Check if event is expired
+function isEventExpired(eventDate, eventTime) {
+    const now = new Date();
+    const eventDateTime = new Date(eventDate + ' ' + eventTime);
+    return now >= eventDateTime;
+}
+
 // Display events in grid
 function displayEvents(events) {
     console.log('🎨 Displaying events:', events.length);
-    
+
     const eventsGrid = document.getElementById('eventsGrid');
-    
+
     if (!eventsGrid) {
         console.error('❌ Element #eventsGrid not found!');
         return;
     }
-    
+
     if (!events || events.length === 0) {
         showEmptyState('Tidak ada event yang ditemukan');
         return;
     }
-    
+
     console.log('Creating event cards...');
     eventsGrid.innerHTML = events.map(event => createEventCard(event)).join('');
-    
+
     // Attach click listeners to view detail buttons
     setTimeout(() => {
         attachViewDetailListeners();
     }, 100);
-    
+
     console.log('✅ Events displayed successfully');
 }
 
@@ -73,23 +127,22 @@ function displayEvents(events) {
 function attachViewDetailListeners() {
     const viewButtons = document.querySelectorAll('.btn-view-detail');
     console.log('🔘 Attaching listeners to', viewButtons.length, 'view detail buttons');
-    
+
     viewButtons.forEach((btn, index) => {
         const eventId = parseInt(btn.getAttribute('data-id'));
         console.log(`  - Button ${index + 1}: Event ID ${eventId}`);
-        
-        btn.addEventListener('click', function(e) {
+
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             console.log('👁️ View Detail clicked for event ID:', eventId);
             showEventDetail(eventId);
         });
     });
-    
+
     console.log('✅ View detail listeners attached');
 }
 
-// Create event card HTML
 function createEventCard(event) {
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('id-ID', {
@@ -98,67 +151,77 @@ function createEventCard(event) {
         month: 'long',
         day: 'numeric'
     });
-    
-   return `
-    <div class="event-card" data-category="${event.category}">
-        
-        <!-- IMAGE -->
-        <div style="position: relative;">
-            <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                 alt="${event.title}" class="event-image">
-            <span class="event-badge">${event.category}</span>
-        </div>
 
-        <!-- CONTENT -->
-        <div class="event-content">
-            <h3 class="event-title">${event.title}</h3>
+    // Check if expiring soon
+    const expiringSoon = isExpiringSoon(event.date, event.time);
 
-            ${event.faculty ? `
-                <div class="event-info" style="background: var(--light-color); padding: 0.5rem; border-radius: 6px; margin-bottom: 0.5rem;">
-                    <i class="fas fa-university" style="color: var(--primary-color);"></i>
-                    <span><strong>${event.faculty}</strong></span>
-                </div>
-            ` : ''}
+    return `
+        <div class="event-card" data-category="${event.category}">
+            <div style="position: relative;">
+                <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
+                     alt="${event.title}" class="event-image">
 
-            ${event.study_program ? `
+                <!-- ONLY category badge shown on image -->
+                <span class="event-badge" style="left: 1rem;">${event.category}</span>
+            </div>
+
+            <div class="event-content">
+
+                <!-- TITLE + EXPIRED TAG HERE -->
+                <h3 class="event-title">
+                    ${event.title}
+                    ${expiringSoon ? `<span class="expired-tag"><i class="fas fa-exclamation-triangle"></i> Expired Soon</span>` : ""}
+                </h3>
+                
+                ${event.faculty ? `
+                    <div class="event-info" style="background: var(--light-color); padding: 0.5rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <i class="fas fa-university" style="color: var(--primary-color);"></i>
+                        <span><strong>${event.faculty}</strong></span>
+                    </div>
+                ` : ''}
+
+                ${event.study_program ? `
+                    <div class="event-info">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>${event.study_program}</span>
+                    </div>
+                ` : ''}
+
                 <div class="event-info">
-                    <i class="fas fa-graduation-cap"></i>
-                    <span>${event.study_program}</span>
+                    <i class="fas fa-calendar"></i>
+                    <span>${formattedDate}</span>
                 </div>
-            ` : ''}
 
-            <div class="event-info">
-                <i class="fas fa-calendar"></i>
-                <span>${formattedDate}</span>
-            </div>
-            <div class="event-info">
-                <i class="fas fa-clock"></i>
-                <span>${event.time} WITA</span>
-            </div>
-            <div class="event-info">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>${event.location}</span>
-            </div>
-            <div class="event-info">
-                <i class="fas fa-users"></i>
-                <span>Kapasitas: ${event.capacity} orang</span>
-            </div>
+                <div class="event-info">
+                    <i class="fas fa-clock"></i>
+                    <span>${event.time} WITA</span>
+                </div>
 
-            <div style="font-size: 0.875rem; color: var(--gray-color); margin-top: 1rem;">
-                <strong>Penyelenggara:</strong> ${event.organizer}
+                <div class="event-info">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${event.location}</span>
+                </div>
+
+                <div class="event-info">
+                    <i class="fas fa-users"></i>
+                    <span>Kapasitas: ${event.capacity} orang</span>
+                </div>
+
+                <p class="event-description">${event.description}</p>
+
+                <div style="font-size: 0.875rem; color: var(--gray-color); margin-top: 1rem;">
+                    <strong>Penyelenggara:</strong> ${event.organizer}
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <button class="btn btn-primary btn-block btn-view-detail" data-id="${event.id}">
+                        <i class="fas fa-eye"></i> Lihat Detail
+                    </button>
+                </div>
+
             </div>
         </div>
-
-        <!-- FOOTER BUTTON (selalu di bawah) -->
-        <div class="event-footer">
-            <button class="btn btn-primary btn-block btn-view-detail" data-id="${event.id}">
-                <i class="fas fa-eye"></i> Lihat Detail
-            </button>
-        </div>
-
-    </div>
-`;
-
+    `;
 }
 
 // Show event detail in modal
@@ -166,17 +229,17 @@ function showEventDetail(eventId) {
     console.log('=== SHOW EVENT DETAIL ===');
     console.log('Event ID:', eventId);
     console.log('All events:', allEvents.length);
-    
+
     const event = allEvents.find(e => e.id == eventId);
-    
+
     if (!event) {
         console.error('❌ Event not found!');
         alert('Event tidak ditemukan!');
         return;
     }
-    
+
     console.log('✅ Event found:', event);
-    
+
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('id-ID', {
         weekday: 'long',
@@ -184,7 +247,7 @@ function showEventDetail(eventId) {
         month: 'long',
         day: 'numeric'
     });
-    
+
     const modalContent = `
         <div style="text-align: center; margin-bottom: 2rem;">
             <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
@@ -284,10 +347,10 @@ function showEventDetail(eventId) {
             <i class="fas fa-info-circle"></i> Event ini sudah disetujui oleh admin dan terbuka untuk umum
         </div>
     `;
-    
+
     const modalContentElement = document.getElementById('eventModalContent');
     const modal = document.getElementById('viewEventModal');
-    
+
     if (modalContentElement && modal) {
         modalContentElement.innerHTML = modalContent;
         modal.classList.add('active');
@@ -313,7 +376,7 @@ window.closeEventModal = closeEventModal;
 // Setup event listeners
 function setupEventListeners() {
     console.log('⚙️ Setting up event listeners...');
-    
+
     // Search functionality
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -322,19 +385,19 @@ function setupEventListeners() {
             filterEvents();
         });
     }
-    
+
     // Category filter
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             filterButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             currentFilter = btn.getAttribute('data-category');
             filterEvents();
         });
     });
-    
+
     // Close modal when clicking outside
     const modal = document.getElementById('viewEventModal');
     if (modal) {
@@ -344,22 +407,22 @@ function setupEventListeners() {
             }
         });
     }
-    
+
     console.log('✅ Event listeners setup complete');
 }
 
 // Filter events
 function filterEvents() {
     let filtered = allEvents;
-    
+
     // Filter by category
     if (currentFilter !== 'all') {
         filtered = filtered.filter(event => event.category === currentFilter);
     }
-    
+
     // Filter by search query
     if (searchQuery) {
-        filtered = filtered.filter(event => 
+        filtered = filtered.filter(event =>
             event.title.toLowerCase().includes(searchQuery) ||
             event.description.toLowerCase().includes(searchQuery) ||
             event.location.toLowerCase().includes(searchQuery) ||
@@ -368,7 +431,7 @@ function filterEvents() {
             (event.study_program && event.study_program.toLowerCase().includes(searchQuery))
         );
     }
-    
+
     displayEvents(filtered);
 }
 

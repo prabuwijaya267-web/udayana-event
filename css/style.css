@@ -307,6 +307,12 @@ img {
     border-radius: 20px;
     font-size: 0.875rem;
     font-weight: 600;
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    width: auto;          /* PENTING */
+    max-width: max-content; /* PENTING AGAR TIDAK MEMANJANG */
+    white-space: nowrap;   /* Biar tidak pecah baris */
 }
 
 .event-content {
@@ -342,6 +348,27 @@ img {
     max-height: 3em;
     line-height: 1.5em;
 }
+
+/* --- komponen lain --- */
+.event-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: .75rem;
+}
+
+/* Tambahkan ini di paling bawah */
+.expired-tag {
+    display: inline-block;
+    background: #dbb211f8;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
 
 /* ===== STATUS BADGES ===== */
 .status-badge {
@@ -749,6 +776,24 @@ img {
 
 .fa-spin {
     animation: spin 1s linear infinite;
+}
+
+/* ===== ADD THIS TO css/style.css (at the end before responsive section) ===== */
+/* Expired status badge */
+.status-expired {
+    background: #6b7280;
+    color: white;
+}
+
+/* Event card expired state */
+.event-card.expired {
+    opacity: 0.7;
+    filter: grayscale(50%);
+}
+
+.event-card.expired .event-title {
+    text-decoration: line-through;
+    color: var(--gray-color);
 }
 
 /* ===== RESPONSIVE ===== */
