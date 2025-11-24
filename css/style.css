@@ -547,6 +547,7 @@ img {
     background: linear-gradient(135deg, #7c2d12, #991b1b);
 }
 
+/* ===== NAVBAR USER DROPDOWN ===== */
 .nav-user {
     position: relative;
     display: flex;
@@ -573,9 +574,12 @@ img {
     margin-top: 0.5rem;
     min-width: 180px;
     overflow: hidden;
+    z-index: 1000;
 }
 
-.nav-user:hover .user-dropdown {
+/* Show dropdown on hover */
+.nav-user:hover .user-dropdown,
+.user-dropdown:hover {
     display: block;
 }
 
@@ -588,6 +592,31 @@ img {
 
 .user-dropdown a:hover {
     background: var(--light-color);
+}
+
+/* TAMBAHKAN: Smooth transition untuk dropdown */
+.user-dropdown {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+.nav-user:hover .user-dropdown {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s; /* Langsung muncul saat hover */
+}
+
+/* PENTING: Delay saat dropdown mau hilang */
+.nav-user .user-dropdown {
+    transition-delay: 0.3s; /* Delay 300ms sebelum hilang */
+}
+
+.nav-user:hover .user-dropdown {
+    transition-delay: 0s; /* Langsung muncul */
 }
 
 .dashboard-container {
