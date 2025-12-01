@@ -66,7 +66,7 @@ function setupAdminDropdown() {
             setTimeout(() => {
                 userDropdown.style.display = 'none';
             }, 200);
-        }, 400); // 400ms delay
+        }, 200); // 400ms delay
     });
 
     console.log('✅ Admin dropdown setup complete');

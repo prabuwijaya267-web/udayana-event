@@ -1,4 +1,4 @@
-// ===== SCRIPT.JS - Main functionality for landing page =====
+// ===== SCRIPT.JS - Main functionality for landing page (FIXED) =====
 
 console.log('🚀 script.js loaded');
 
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // PENTING: Update expired events di database dulu
     await checkExpiredEvents();
-    
+
     // Baru load events (yang sudah di-filter expired di server)
     await loadEvents();
 
@@ -23,9 +23,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function checkExpiredEvents() {
     try {
         console.log('⏰ Checking for expired events...');
-        console.log('Current time (WIT):', new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jayapura' }));
-        
+        console.log('Current time (Local):', new Date().toLocaleString('id-ID'));
+
         const response = await fetch('api/events/check_expired_events.php');
+
+        if (!response.ok) {
+            console.error('❌ HTTP Error:', response.status, response.statusText);
+            return;
+        }
+
         const data = await response.json();
 
         console.log('📋 Expired check response:', data);
@@ -36,7 +42,7 @@ async function checkExpiredEvents() {
             console.log('   - Events updated to expired:', data.updated);
             console.log('   - Total expired events:', data.total_expired);
             console.log('   - Total active events:', data.total_active);
-            console.log('   - Server datetime (WIT):', data.current_datetime);
+            console.log('   - Server datetime (WITA):', data.current_datetime);
         } else {
             console.error('❌ Expired check failed:', data.message);
         }
@@ -54,28 +60,41 @@ async function loadEvents() {
         console.log('Fetching from:', endpoint);
 
         const response = await fetch(endpoint);
-        console.log('Response status:', response.status);
+        console.log('Response status:', response.status, response.statusText);
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        }
 
         const data = await response.json();
-        console.log('Data received:', data);
-        console.log('Events count:', data.events ? data.events.length : 0);
+        console.log('📦 Data received:', data);
+        console.log('Events count:', data.count || 0);
 
-        if (data.success && data.events && data.events.length > 0) {
-            console.log('✅ Events loaded successfully:', data.events.length);
+        if (data.success) {
+            if (data.events && data.events.length > 0) {
+                console.log('✅ Events loaded successfully:', data.events.length);
+                console.log('First event sample:', data.events[0]);
 
-            // DOUBLE CHECK: Filter hanya event yang belum expired
-            allEvents = data.events.filter(e => e.expired == 0 || e.expired === '0');
+                // DOUBLE CHECK: Filter hanya event yang belum expired
+                allEvents = data.events.filter(e => e.expired == 0 || e.expired === '0');
 
-            console.log("Active (non-expired) events:", allEvents.length);
+                console.log("Active (non-expired) events:", allEvents.length);
 
-            displayEvents(allEvents);
+                displayEvents(allEvents);
+            } else {
+                console.warn('⚠️ No events found in response');
+                console.log('Response data:', data);
+                showEmptyState('Tidak ada event yang tersedia saat ini');
+            }
         } else {
-            console.warn('⚠️ No events found');
-            showEmptyState('Tidak ada event yang tersedia saat ini');
+            console.error('❌ API returned success: false');
+            console.log('Message:', data.message);
+            showEmptyState('Gagal memuat event: ' + (data.message || 'Unknown error'));
         }
     } catch (error) {
         console.error('❌ Error loading events:', error);
-        showEmptyState('Gagal memuat event. Pastikan server PHP berjalan.');
+        console.error('Error details:', error.message);
+        showEmptyState('Gagal memuat event. Pastikan server PHP berjalan dan API dapat diakses.');
     }
 }
 
@@ -152,8 +171,8 @@ function createEventCard(event) {
     return `
         <div class="event-card" data-category="${event.category}">
             <div style="position: relative;">
-                <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                     alt="${event.title}" class="event-image">
+                <img src="${event.image ? (event.image.startsWith('http') ? event.image : 'uploads/events/' + event.image.split('/').pop()) : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
+     alt="${event.title}" class="event-image">
 
                 <!-- Category badge -->
                 <span class="event-badge" style="left: 1rem;">${event.category}</span>
@@ -187,7 +206,7 @@ function createEventCard(event) {
 
                 <div class="event-info">
                     <i class="fas fa-clock"></i>
-                    <span>${event.time} WIT</span>
+                    <span>${event.time} WITA</span>
                 </div>
 
                 <div class="event-info">
@@ -241,8 +260,8 @@ function showEventDetail(eventId) {
 
     const modalContent = `
         <div style="text-align: center; margin-bottom: 2rem;">
-            <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                 alt="${event.title}" 
+            <img src="${event.image ? (event.image.startsWith('http') ? event.image : 'uploads/events/' + event.image.split('/').pop()) : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
+     alt="${event.title}" class="event-image"> 
                  style="max-width: 100%; height: 300px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         </div>
         
@@ -292,7 +311,7 @@ function showEventDetail(eventId) {
                 </div>
                 <div>
                     <div style="font-size: 0.75rem; color: var(--gray-color); text-transform: uppercase; font-weight: 600;">Waktu</div>
-                    <div style="font-weight: 600; color: var(--dark-color);">${event.time} WIT</div>
+                    <div style="font-weight: 600; color: var(--dark-color);">${event.time} WITA</div>
                 </div>
             </div>
             
@@ -427,16 +446,22 @@ function filterEvents() {
 }
 
 // Show empty state
-function showEmptyState(message) {
-    const eventsGrid = document.getElementById('eventsGrid');
-    if (eventsGrid) {
-        eventsGrid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--gray-color);">
-                <i class="fas fa-calendar-times" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                <p style="font-size: 1.1rem;">${message}</p>
-            </div>
-        `;
-    }
-}
+function showEmptyState(message = 'Anda belum memiliki event') {
+    const container = document.getElementById('myEventsContainer');
 
-console.log('✅ script.js initialized successfully');
+    if (!container) {
+        console.error('❌ Container not found');
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--gray-color);">
+            <i class="fas fa-calendar-times" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem;">${message}</h3>
+            <p style="margin-bottom: 1.5rem;">Mulai buat event pertama Anda!</p>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+                <i class="fas fa-plus"></i> Buat Event Baru
+            </button>
+        </div>
+    `;
+}

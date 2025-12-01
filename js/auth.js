@@ -1,4 +1,4 @@
-// ===== AUTH.JS - Handle Login, Register, Session with Dropdown Delay =====
+// ===== AUTH.JS - Complete Authentication Handler =====
 
 // Base project path
 const BASE_PATH = '/udayana-event';
@@ -80,7 +80,6 @@ function updateNavbar() {
 
         setupLogoutHandler();
         
-        // Setup dropdown with delay
         setTimeout(() => {
             setupUserDropdownWithDelay();
         }, 100);
@@ -100,7 +99,6 @@ function setupUserDropdownWithDelay() {
 
     if (!userDropdown) return;
 
-    // Show dropdown on hover
     navUser.addEventListener('mouseenter', function() {
         clearTimeout(hideTimeout);
         userDropdown.style.display = 'block';
@@ -112,7 +110,6 @@ function setupUserDropdownWithDelay() {
         }, 10);
     });
 
-    // Hide dropdown with delay
     navUser.addEventListener('mouseleave', function() {
         hideTimeout = setTimeout(() => {
             userDropdown.style.opacity = '0';
@@ -122,10 +119,9 @@ function setupUserDropdownWithDelay() {
             setTimeout(() => {
                 userDropdown.style.display = 'none';
             }, 200);
-        }, 50); // 400ms delay - bisa diubah sesuai keinginan
+        }, 50);
     });
 
-    // Keep dropdown open when hovering over it
     userDropdown.addEventListener('mouseenter', function() {
         clearTimeout(hideTimeout);
     });
@@ -139,7 +135,7 @@ function setupUserDropdownWithDelay() {
             setTimeout(() => {
                 userDropdown.style.display = 'none';
             }, 200);
-        }, 300); // 400ms delay
+        }, 200);
     });
 }
 
@@ -171,6 +167,142 @@ function apiPath(relative) {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     updateNavbar();
+    
+    // Setup register form if exists
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        setupRegisterForm();
+    }
 });
 
-// ... rest of auth.js (login form, register form, etc.)
+// Setup register form handler
+function setupRegisterForm() {
+    const registerForm = document.getElementById('registerForm');
+    const alertMessage = document.getElementById('alertMessage');
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+
+    // Password visibility toggles
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePassword.classList.toggle('fa-eye');
+            togglePassword.classList.toggle('fa-eye-slash');
+        });
+    }
+
+    if (toggleConfirmPassword && confirmPasswordInput) {
+        toggleConfirmPassword.addEventListener('click', () => {
+            const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPasswordInput.setAttribute('type', type);
+            toggleConfirmPassword.classList.toggle('fa-eye');
+            toggleConfirmPassword.classList.toggle('fa-eye-slash');
+        });
+    }
+
+    // Password strength indicator
+    if (passwordInput) {
+        passwordInput.addEventListener('input', (e) => {
+            const password = e.target.value;
+            const strengthBar = document.querySelector('.strength-bar');
+            
+            if (!strengthBar) return;
+
+            let strength = 0;
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 8) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+
+            strengthBar.style.width = strength + '%';
+            
+            if (strength < 50) {
+                strengthBar.style.background = '#ef4444';
+            } else if (strength < 75) {
+                strengthBar.style.background = '#f59e0b';
+            } else {
+                strengthBar.style.background = '#10b981';
+            }
+        });
+    }
+
+    // Form submission
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const agreeTerms = document.getElementById('agreeTerms').checked;
+
+        // Validation
+        if (!agreeTerms) {
+            showAlert('error', 'Anda harus menyetujui syarat dan ketentuan!');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showAlert('error', 'Password tidak cocok!');
+            return;
+        }
+
+        if (password.length < 6) {
+            showAlert('error', 'Password minimal 6 karakter!');
+            return;
+        }
+
+        // Show loading
+        const btnText = document.querySelector('.btn-text');
+        const btnLoading = document.querySelector('.btn-loading');
+        btnText.style.display = 'none';
+        btnLoading.style.display = 'inline-block';
+
+        try {
+            const response = await fetch('api/auth/register.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showAlert('success', 'Registrasi berhasil! Mengalihkan ke halaman login...');
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                showAlert('error', data.message || 'Registrasi gagal!');
+                btnText.style.display = 'inline-block';
+                btnLoading.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Register error:', error);
+            showAlert('error', 'Terjadi kesalahan! Pastikan server berjalan.');
+            btnText.style.display = 'inline-block';
+            btnLoading.style.display = 'none';
+        }
+    });
+
+    function showAlert(type, message) {
+        alertMessage.className = 'alert alert-' + type;
+        alertMessage.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> 
+            ${message}
+        `;
+        alertMessage.style.display = 'block';
+
+        setTimeout(() => {
+            alertMessage.style.display = 'none';
+        }, 5000);
+    }
+}
+
+console.log('✅ auth.js loaded successfully');

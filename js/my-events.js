@@ -1,13 +1,105 @@
-// ===== MY-EVENTS.JS - User's events management with Faculty & Prodi =====
+// ===== MY-EVENTS.JS (UPDATED) - Dengan Upload Gambar =====
 
 let myEvents = [];
 let currentStatus = 'all';
+let uploadedImageUrl = ''; // Simpan URL gambar yang diupload
 
 // Load user's events
 document.addEventListener('DOMContentLoaded', () => {
     loadMyEvents();
     setupMyEventsListeners();
+    setupImageUpload(); // Setup upload handler
 });
+
+// Setup image upload handler
+function setupImageUpload() {
+    const imageInput = document.getElementById('eventImageFile');
+    const imageUrlInput = document.getElementById('eventImage');
+    const uploadBtn = document.getElementById('uploadImageBtn');
+    const previewImg = document.getElementById('imagePreview');
+    
+    if (!imageInput || !uploadBtn) return;
+    
+    // Handle upload button click
+    uploadBtn.addEventListener('click', async () => {
+        const file = imageInput.files[0];
+        
+        if (!file) {
+            alert('Pilih gambar terlebih dahulu!');
+            return;
+        }
+        
+        // Validasi ukuran (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar! Maksimal 5MB.');
+            return;
+        }
+        
+        // Validasi tipe file
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Tipe file tidak valid! Gunakan JPG, PNG, GIF, atau WebP.');
+            return;
+        }
+        
+        // Show loading
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const response = await fetch('../api/upload_image.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                uploadedImageUrl = data.image_url;
+                imageUrlInput.value = data.image_url;
+                
+                // Show preview
+                if (previewImg) {
+                    previewImg.src = '../' + data.image_url;
+                    previewImg.style.display = 'block';
+                }
+                
+                alert('✅ Gambar berhasil diupload!');
+                uploadBtn.innerHTML = '<i class="fas fa-check"></i> Berhasil!';
+                
+                setTimeout(() => {
+                    uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+                    uploadBtn.disabled = false;
+                }, 2000);
+            } else {
+                alert('❌ ' + data.message);
+                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+                uploadBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('❌ Terjadi kesalahan saat upload!');
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+            uploadBtn.disabled = false;
+        }
+    });
+    
+    // Preview saat file dipilih
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && previewImg) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
 // Load my events from API
 async function loadMyEvents() {
@@ -85,8 +177,7 @@ function displayMyEvents(events) {
     grid.innerHTML = filtered.map(event => createMyEventCard(event)).join('');
 }
 
-// Create my event card
-// Create my event card
+// Create my event card (sama seperti sebelumnya, tidak perlu diubah)
 function createMyEventCard(event) {
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('id-ID', {
@@ -96,7 +187,6 @@ function createMyEventCard(event) {
         day: 'numeric'
     });
 
-    // Check if expired or expiring soon
     const isExpired = event.expired == 1;
     const expiringSoon = !isExpired && isExpiringSoon(event.date, event.time);
     
@@ -127,12 +217,11 @@ function createMyEventCard(event) {
     return `
         <div class="event-card ${isExpired ? 'expired' : ''}" style="border-left: 4px solid ${borderColor};">
             <div style="position: relative;">
-                <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                     alt="${event.title}" class="event-image">
+                <img src="${event.image ? (event.image.startsWith('http') ? event.image : '../' + event.image) : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
+     alt="${event.title}" class="event-image">
                 <span class="event-badge">${event.category}</span>
                 <span class="status-badge status-${event.status} ${isExpired ? 'status-expired' : ''}" style="position: absolute; top: 1rem; right: 1rem; left: auto;">
-                    <i class="fas fa-${statusIcon
-                    }"></i> ${statusText}
+                    <i class="fas fa-${statusIcon}"></i> ${statusText}
                 </span>
                 ${expiringSoon && !isExpired ? `
                     <span class="event-badge" style="position: absolute; top: 3.5rem; right: 1rem; left: auto; background: #ef4444;">
@@ -158,7 +247,7 @@ function createMyEventCard(event) {
                 </div>
                 <div class="event-info">
                     <i class="fas fa-clock"></i>
-                    <span>${event.time} WIT</span>
+                    <span>${event.time} WITA</span>
                 </div>
                 <div class="event-info">
                     <i class="fas fa-map-marker-alt"></i>
@@ -278,6 +367,7 @@ function openCreateModal() {
     document.getElementById('modalTitle').textContent = 'Buat Event Baru';
     document.getElementById('submitBtnText').textContent = 'Kirim untuk Ditinjau';
     document.getElementById('eventId').value = '';
+    uploadedImageUrl = '';
     resetForm();
     document.getElementById('createEventModal').classList.add('active');
 }
@@ -300,6 +390,15 @@ function editMyEvent(eventId) {
     document.getElementById('eventImage').value = event.image || '';
     document.getElementById('eventDescription').value = event.description;
     
+    uploadedImageUrl = event.image || '';
+    
+    // Show preview if image exists
+    const previewImg = document.getElementById('imagePreview');
+    if (previewImg && event.image) {
+        previewImg.src = '../' + event.image;
+        previewImg.style.display = 'block';
+    }
+    
     // Set faculty and study program
     document.getElementById('eventFaculty').value = event.faculty || '';
     if (event.faculty) {
@@ -315,34 +414,73 @@ function editMyEvent(eventId) {
 // Handle form submit
 async function handleSubmitEvent(e) {
     e.preventDefault();
+    
+    console.log('=== SUBMIT EVENT FORM ===');
 
+    // PENTING: Cek user login
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) return;
+    if (!user || !user.id) {
+        alert('❌ Session habis! Silakan login kembali.');
+        window.location.href = '../login.html';
+        return;
+    }
+    
+    console.log('User logged in:', user);
 
     const eventId = document.getElementById('eventId').value;
     const isEdit = eventId !== '';
+    
+    // Ambil gambar dari upload atau URL manual
+    const imageUrlManual = document.getElementById('eventImageUrl');
+    const finalImageUrl = uploadedImageUrl || (imageUrlManual ? imageUrlManual.value : '');
 
+    // PENTING: Buat object dengan user_id yang jelas
     const eventData = {
-        user_id: user.id,
-        title: document.getElementById('eventTitle').value,
+        user_id: parseInt(user.id), // PASTIKAN INTEGER
+        title: document.getElementById('eventTitle').value.trim(),
         date: document.getElementById('eventDate').value,
         time: document.getElementById('eventTime').value,
-        location: document.getElementById('eventLocation').value,
+        location: document.getElementById('eventLocation').value.trim(),
         category: document.getElementById('eventCategory').value,
-        capacity: document.getElementById('eventCapacity').value,
-        organizer: document.getElementById('eventOrganizer').value,
+        capacity: parseInt(document.getElementById('eventCapacity').value),
+        organizer: document.getElementById('eventOrganizer').value.trim(),
         faculty: document.getElementById('eventFaculty').value,
         study_program: document.getElementById('eventStudyProgram').value,
-        image: document.getElementById('eventImage').value,
-        description: document.getElementById('eventDescription').value
+        image: finalImageUrl,
+        description: document.getElementById('eventDescription').value.trim()
     };
 
     if (isEdit) {
         eventData.id = parseInt(eventId);
     }
 
+    console.log('Event data to submit:', eventData);
+    
+    // Validasi manual
+    if (!eventData.user_id) {
+        alert('❌ User ID tidak ditemukan! Silakan login ulang.');
+        return;
+    }
+    
+    if (!eventData.title) {
+        alert('❌ Judul event wajib diisi!');
+        return;
+    }
+    
+    if (!eventData.faculty) {
+        alert('❌ Fakultas wajib dipilih!');
+        return;
+    }
+    
+    if (!eventData.study_program) {
+        alert('❌ Program Studi wajib dipilih!');
+        return;
+    }
+
     try {
         const endpoint = isEdit ? '../api/events/update_event.php' : '../api/events/add_event.php';
+        console.log('Sending to:', endpoint);
+        
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -351,19 +489,23 @@ async function handleSubmitEvent(e) {
             body: JSON.stringify(eventData)
         });
 
+        console.log('Response status:', response.status);
+        
         const data = await response.json();
+        console.log('Response data:', data);
 
         if (data.success) {
-            alert(isEdit ? 'Event berhasil diupdate!' : 'Event berhasil dibuat! Menunggu persetujuan admin.');
+            alert(isEdit ? '✅ Event berhasil diupdate!' : '✅ Event berhasil dibuat! Menunggu persetujuan admin.');
             document.getElementById('createEventModal').classList.remove('active');
             resetForm();
             loadMyEvents();
         } else {
-            alert(data.message || 'Gagal menyimpan event!');
+            console.error('Submit failed:', data);
+            alert('❌ ' + (data.message || 'Gagal menyimpan event!'));
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan!');
+        console.error('Submit error:', error);
+        alert('❌ Terjadi kesalahan: ' + error.message);
     }
 }
 
@@ -418,8 +560,8 @@ function viewEventDetails(eventId) {
 
     const content = `
         <div style="text-align: center; margin-bottom: 2rem;">
-            <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                 alt="${event.title}" 
+           <img src="${event.image ? (event.image.startsWith('http') ? event.image : '../' + event.image) : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
+     alt="${event.title}" class="event-image"> 
                  style="max-width: 100%; height: 300px; object-fit: cover; border-radius: 12px;">
         </div>
         
@@ -444,7 +586,7 @@ function viewEventDetails(eventId) {
             </div>
             <div class="info-item">
                 <i class="fas fa-clock" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                <strong>Waktu:</strong> ${event.time} WIT
+                <strong>Waktu:</strong> ${event.time} WITA
             </div>
             <div class="info-item">
                 <i class="fas fa-map-marker-alt" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
@@ -497,6 +639,13 @@ function resetForm() {
     if (form) form.reset();
     document.getElementById('eventId').value = '';
     document.getElementById('eventStudyProgram').disabled = true;
+    uploadedImageUrl = '';
+    
+    const previewImg = document.getElementById('imagePreview');
+    if (previewImg) {
+        previewImg.style.display = 'none';
+        previewImg.src = '';
+    }
 }
 
 // Show empty state

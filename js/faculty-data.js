@@ -20,7 +20,11 @@ const facultyData = {
     "Fakultas Teknik": [
         "Teknik Sipil",
         "Teknik Mesin",
-        "Teknik Elektro"
+        "Teknik Elektro",
+        "Teknologi Informasi",
+        "Teknik Lingkungan",
+        "Teknik Industri",
+        "Arsitektur"
     ],
     "Fakultas Pertanian": [
         "Agribisnis",

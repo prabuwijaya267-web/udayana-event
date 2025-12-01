@@ -200,8 +200,7 @@ function createAdminEventCard(event) {
     return `
         <div class="event-card" style="border-left: 4px solid var(--${statusClass}-color);">
             <div style="position: relative;">
-                <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                     alt="${event.title}" class="event-image">
+                <img src="${event.image ? (event.image.startsWith('http') ? event.image : '../' + event.image) : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}"
                 <span class="event-badge">${event.category}</span>
                 <span class="status-badge status-${event.status}" style="position: absolute; top: 1rem; left: 1rem;">
                     <i class="fas fa-${statusIcon}"></i> ${statusText}
@@ -387,8 +386,7 @@ function viewEventDetailsHandler(eventId) {
 
     const content = `
         <div style="text-align: center; margin-bottom: 2rem;">
-            <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                 alt="${event.title}" 
+            <img src="${event.image ? (event.image.startsWith('http') ? event.image : '../' + event.image) : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}"
                  style="max-width: 100%; height: 300px; object-fit: cover; border-radius: 12px;">
         </div>
         

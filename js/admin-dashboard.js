@@ -158,8 +158,7 @@ function createPendingEventCard(event) {
     return `
         <div class="event-card" style="border: 2px solid var(--warning-color);">
             <div style="position: relative;">
-                <img src="${event.image || 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}" 
-                     alt="${event.title}" class="event-image">
+                <img src="${event.image ? (event.image.startsWith('http') ? event.image : '../' + event.image) : 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800'}"
                 <span class="event-badge">${event.category}</span>
                 <span class="status-badge status-pending" style="position: absolute; top: 1rem; left: 1rem;">
                     Pending
